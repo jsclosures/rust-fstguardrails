@@ -25,6 +25,7 @@ pub mod bm25;
 pub mod fast_retrieval;
 pub mod semantic_mesh;
 pub mod regex;
+pub mod spelling;
 
 /// Token separator used inside FST keys. Matches Lucene's
 /// `ConcatenateGraphFilter.SEP_LABEL` (U+001E).
@@ -107,6 +108,7 @@ pub struct Tagger {
     /// FST value -> all records sharing that key (synonyms collapse here).
     groups: Vec<Vec<MetaRecord>>,
     regex_patterns: Vec<(crate::regex::Nfa, MetaRecord)>,
+    phrases: Vec<String>,
 }
 
 impl Tagger {
@@ -117,8 +119,10 @@ impl Tagger {
     {
         let mut static_entries = Vec::new();
         let mut regex_patterns = Vec::new();
+        let mut phrases = Vec::new();
 
         for e in entries {
+            phrases.push(e.phrase.clone());
             let is_regex = e.is_regex || auto_detect_regex(&e.phrase);
             let output = e.output.clone().unwrap_or_else(|| derive_output(&e.phrase));
             let meta = MetaRecord {
@@ -191,7 +195,12 @@ impl Tagger {
             .into_inner()
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
         let fst = Fst::new(bytes).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-        Ok(Self { fst, groups, regex_patterns })
+        Ok(Self { fst, groups, regex_patterns, phrases })
+    }
+
+    /// Access the original loaded dictionary phrases
+    pub fn phrases(&self) -> &[String] {
+        &self.phrases
     }
 
     /// Number of distinct FST keys.
@@ -649,7 +658,7 @@ fn file_stem(path: &Path) -> String {
 /// Minimal RFC-4180-ish CSV line parser. Supports quoted fields, embedded
 /// commas, and `""` escapes — same scope as Java's `splitCsv` plus quote
 /// handling.
-fn parse_csv_line(line: &str) -> Vec<String> {
+pub fn parse_csv_line(line: &str) -> Vec<String> {
     let line = line.trim_end_matches('\r');
     let mut out = Vec::new();
     let mut cur = String::new();
@@ -786,7 +795,7 @@ mod tests {
 
     #[test]
     fn loads_data_dir_with_action_column() {
-        let tmp = std::env::temp_dir().join("text_tagger_test_data_v2");
+        let tmp = std::env::temp_dir().join("lume_test_data_v2");
         let _ = std::fs::remove_dir_all(&tmp);
         std::fs::create_dir_all(&tmp).unwrap();
         std::fs::write(

@@ -1,10 +1,10 @@
-# text-tagger & Hybrid BM25-FST Search Engine
+# Lume & Hybrid BM25-FST Search Engine
 
 A high-performance Rust library and CLI suite featuring an FST-backed entity tagger and a field-aware BM25 search engine mesh. Built entirely on [`tantivy-fst`](https://crates.io/crates/tantivy-fst) and Rust's standard library with **zero third-party dependencies**.
 
 ## Features (Java parity & Engine additions)
 
-| Feature | Java (`App.java`) | Rust (`text-tagger` suite) |
+| Feature | Java (`App.java`) | Rust (`lume` suite) |
 |---|---|---|
 | FST-backed longest match (forward maximum match) | ✅ | ✅ |
 | Hyphen/dash stripping (`sw-lucene` ≡ `swlucene`) | ✅ | ✅ |
@@ -18,6 +18,7 @@ A high-performance Rust library and CLI suite featuring an FST-backed entity tag
 | Response formats `simple` (default) and `solr` envelope | ✅ | ✅ |
 | `PORT` env var | ✅ | ✅ |
 | **Field-Aware BM25 Search Mesh** | ❌ | ✅ (Engine Mesh Addition) |
+| **On-Demand Directory Indexing** | ❌ | ✅ (Recursively aggregates `.md`, `.markdown`, `.txt` on-the-fly) |
 | **Two-Stage Candidate Pruning Pipeline (`MiniRoaring` & `PrimeFilter`)** | ❌ | ✅ (Engine Mesh Addition) |
 | **Pairwise Posting List Jaccard Similarity** | ❌ | ✅ (Engine Mesh Addition) |
 | **Panic-Safe Shell Piping & Unicode-Aligned Highlighting** | ❌ | ✅ (Engine Mesh Addition) |
@@ -46,7 +47,7 @@ cargo build --release
 ## Library Usage (FST Tagger Only)
 
 ```rust
-use text_tagger::{Entry, Tagger};
+use lume::{Entry, Tagger};
 
 let tagger = Tagger::build(vec![
     Entry::new("New York City", "CITY",    "geo:nyc"),
@@ -126,9 +127,17 @@ This provides instant feedback on the spatial intersection rate and correlation 
 
 You can run the search engine in one-shot mode by supplying query terms, or omit search terms to enter an interactive terminal REPL.
 
+**Single File Search:**
 ```bash
 # Build & Run in production mode targeting a markdown file
 DATA=examples/data cargo run --release --bin search -- examples/monte_cristo.md "edmond mercedes"
+```
+
+**Recursive Directory Indexing & Search:**
+Lume supports **on-demand directory indexing**. If you throw search at a directory of files, it recursively crawls and aggregates all `.md`, `.markdown`, and `.txt` documents on-the-fly, builds the index in memory under 200 milliseconds, and executes the query:
+```bash
+# Recursively index and search the entire examples/ directory on-the-fly
+DATA=examples/data cargo run --release --bin search -- examples "monte cristo"
 ```
 
 ### Premium Terminal UX & Highlights

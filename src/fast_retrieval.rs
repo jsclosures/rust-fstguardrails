@@ -307,9 +307,12 @@ impl PrimeFilter {
         let prime_idx = (h as usize) % PRIMES.len();
         let prime = PRIMES[prime_idx];
 
-        // Safely multiply. If we hit integer overflow capacity, we saturate the bucket (remains unchanged)
-        if let Some(val) = self.signatures[bucket].checked_mul(prime) {
-            self.signatures[bucket] = val;
+        if self.signatures[bucket] != 0 {
+            if let Some(val) = self.signatures[bucket].checked_mul(prime) {
+                self.signatures[bucket] = val;
+            } else {
+                self.signatures[bucket] = 0; // Saturated/Overflowed: match all
+            }
         }
     }
 
@@ -319,8 +322,12 @@ impl PrimeFilter {
         let prime_idx = (h as usize) % PRIMES.len();
         let prime = PRIMES[prime_idx] as u128;
 
-        if let Some(val) = self.tag_signature.checked_mul(prime) {
-            self.tag_signature = val;
+        if self.tag_signature != 0 {
+            if let Some(val) = self.tag_signature.checked_mul(prime) {
+                self.tag_signature = val;
+            } else {
+                self.tag_signature = 0; // Saturated/Overflowed: match all
+            }
         }
     }
 
@@ -332,7 +339,7 @@ impl PrimeFilter {
         let prime_idx = (h as usize) % PRIMES.len();
         let prime = PRIMES[prime_idx];
 
-        self.signatures[bucket] % prime == 0
+        self.signatures[bucket] == 0 || self.signatures[bucket] % prime == 0
     }
 
     /// Check if tag category kind is definitely not present
@@ -341,7 +348,7 @@ impl PrimeFilter {
         let prime_idx = (h as usize) % PRIMES.len();
         let prime = PRIMES[prime_idx] as u128;
 
-        self.tag_signature % prime == 0
+        self.tag_signature == 0 || self.tag_signature % prime == 0
     }
 }
 
@@ -427,5 +434,17 @@ mod tests {
         filter.add_tag_kind("intent");
         assert!(filter.test_tag_kind("intent"));
         assert!(!filter.test_tag_kind("offensive_en"));
+
+        // Test overflow robustness: verify that adding many terms degrades to true (match all) but never false negatives
+        let mut overflow_filter = PrimeFilter::new();
+        for i in 0..1000 {
+            let term = format!("term_{}", i);
+            overflow_filter.add_term(term.as_bytes());
+        }
+        // Verify all added terms still evaluate to true
+        for i in 0..1000 {
+            let term = format!("term_{}", i);
+            assert!(overflow_filter.test_term(term.as_bytes()), "Term term_{} had false negative after overflow!", i);
+        }
     }
 }

@@ -1,8 +1,8 @@
 [package]
-name = "text-tagger"
+name = "lume"
 version = "0.1.0"
 edition = "2021"
-description = "A simple FST-based text tagger in Rust, inspired by Lucene's SolrTextTagger."
+description = "Lume: A high-performance, zero-dependency, FST-backed tagger and on-demand BM25 hybrid search engine."
 
 [dependencies]
 tantivy-fst = "0.5"

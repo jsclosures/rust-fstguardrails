@@ -1,0 +1,25 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running `target\debug\search.exe examples/monte_cristo.md dumas`
+Loaded FST dictionary: 34 records (33 keys) from DATA (kinds: character, location, theme)
+Indexed 235 Markdown sections in 5.50s
+[1;34mSearching for:[0m "dumas" (Variant: Classic)
+Compiled roaring spelling index with 18223 vocabulary words in 159.61ms
+[32m[Two-Stage Pruning] Pruned candidate space from 235 to 1 (roaring generated: 1) sections in 17.30µs[0m
+=== DEBUG DUMAS ===
+Token bytes: "dumas"
+Posting list for dumas: [0]
+Doc 0 title: "Introduction"
+  pf.test_term(dumas) = true
+  title_tf = 0, body_tf = 2
+[34mFound 1 ranked results in 33.30µs[0m
+
+[1;35mRank 1 | Score: 9.3774[0m
+[1;36mHeader: Introduction (Line 1)[0m
+  The Project Gutenberg eBook of The Count of [4;32mMonte Cristo[0m [32m[3c3c6336-05ab-4118-8000-000000000000 (location)][0m
+    
+This eBook is for the use of anyone anywhere in the United States and
+most other parts of the world at no cost and with almost no restrictions
+whatsoever. You may copy it, give it away or re-use it under the terms
+of the Project Gutenberg License included with this eBook or online
+at www.gutenberg.org. If you are not located in the Unit ...
+[38;5;244m────────────────────────────────────────────────────────────[0m

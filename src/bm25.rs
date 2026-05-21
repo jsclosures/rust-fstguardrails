@@ -80,6 +80,25 @@ pub struct SearchHit {
     pub score: f64,
 }
 
+/// Represents the reason why a candidate section was rejected during ranking.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum RejectReason {
+    MissingSection,
+    TagSignatureMismatch,
+    NoTokenMatch,
+    ScoreBelowThreshold(f64),
+    EmptyText,
+    FieldNotRankable,
+}
+
+/// Diagnostic information for a ranked candidate.
+#[derive(Debug, Clone)]
+pub struct RankDebug {
+    pub section_id: u32,
+    pub score: Option<f64>,
+    pub rejected: Option<RejectReason>,
+}
+
 /// Simple, robust line-by-line Markdown section parser.
 /// Cuts sections at `#` headers and records their starting line numbers.
 pub fn parse_markdown(content: &str) -> Vec<Section> {
@@ -325,9 +344,49 @@ impl Bm25Index {
             }
         }
 
+        let mut rejected_missing = 0;
+        let mut rejected_empty = 0;
+        let mut rejected_tag_mismatch = 0;
+        let mut rejected_no_token = 0;
+        let rejected_below_threshold = 0;
+        let mut rejected_not_rankable = 0;
+
+        let mut candidate_details = Vec::with_capacity(num_candidates_roaring);
         let mut pruned_candidates = Vec::with_capacity(num_candidates_roaring);
+
         for doc_id in candidate_ids {
             let doc_idx = doc_id as usize;
+            if doc_idx >= self.sections.len() {
+                rejected_missing += 1;
+                candidate_details.push(RankDebug {
+                    section_id: doc_id,
+                    score: None,
+                    rejected: Some(RejectReason::MissingSection),
+                });
+                continue;
+            }
+
+            let sec = &self.sections[doc_idx];
+            if sec.title.is_empty() && sec.body.is_empty() {
+                rejected_empty += 1;
+                candidate_details.push(RankDebug {
+                    section_id: doc_id,
+                    score: None,
+                    rejected: Some(RejectReason::EmptyText),
+                });
+                continue;
+            }
+
+            if self.title_lens[doc_idx] == 0 && self.body_lens[doc_idx] == 0 {
+                rejected_not_rankable += 1;
+                candidate_details.push(RankDebug {
+                    section_id: doc_id,
+                    score: None,
+                    rejected: Some(RejectReason::FieldNotRankable),
+                });
+                continue;
+            }
+
             let pf = &self.prime_filters[doc_idx];
             
             // Tag signature verification: Candidate must contain all query tag kinds if present
@@ -338,13 +397,21 @@ impl Bm25Index {
                     break;
                 }
             }
-            if tag_match {
-                pruned_candidates.push(doc_idx);
+            if !tag_match {
+                rejected_tag_mismatch += 1;
+                candidate_details.push(RankDebug {
+                    section_id: doc_id,
+                    score: None,
+                    rejected: Some(RejectReason::TagSignatureMismatch),
+                });
+                continue;
             }
+
+            pruned_candidates.push(doc_id);
         }
 
         let pruning_elapsed = start_pruning.elapsed();
-        println!(
+        eprintln!(
             "\x1B[32m[Two-Stage Pruning] Pruned candidate space from {} to {} (roaring generated: {}) sections in {:.2?}\x1B[0m",
             self.num_docs, pruned_candidates.len(), num_candidates_roaring, pruning_elapsed
         );
@@ -352,7 +419,8 @@ impl Bm25Index {
         // Stage 2: Heavy Scoring on active candidates only
         let mut hits = Vec::new();
         
-        for &doc_idx in &pruned_candidates {
+        for doc_id in pruned_candidates {
+            let doc_idx = doc_id as usize;
             let mut total_score = 0.0;
             let pf = &self.prime_filters[doc_idx];
             
@@ -413,9 +481,76 @@ impl Bm25Index {
                     section_index: doc_idx,
                     score: total_score,
                 });
+                candidate_details.push(RankDebug {
+                    section_id: doc_id,
+                    score: Some(total_score),
+                    rejected: None,
+                });
+            } else {
+                rejected_no_token += 1;
+                candidate_details.push(RankDebug {
+                    section_id: doc_id,
+                    score: Some(0.0),
+                    rejected: Some(RejectReason::NoTokenMatch),
+                });
             }
         }
         
+        // Print high-level Rejection Accounting summary to stderr
+        eprintln!("\x1B[33mCandidates: {}\x1B[0m", num_candidates_roaring);
+        eprintln!("\x1B[33mRanked: {}\x1B[0m", hits.len());
+        eprintln!("\x1B[33mRejected:\x1B[0m");
+        eprintln!("  MissingSection: {}", rejected_missing);
+        eprintln!("  EmptyText: {}", rejected_empty);
+        eprintln!("  FieldNotRankable: {}", rejected_not_rankable);
+        eprintln!("  TagSignatureMismatch: {}", rejected_tag_mismatch);
+        eprintln!("  NoTokenMatch: {}", rejected_no_token);
+        eprintln!("  ScoreBelowThreshold: {}", rejected_below_threshold);
+
+        // Trigger deep diagnostic explanation if hits is empty but we had candidates
+        if hits.is_empty() && num_candidates_roaring > 0 {
+            eprintln!("\n\x1B[1;31m🔍 [Deep Rejection Diagnostics] Why zero ranked results?\x1B[0m");
+            for detail in &candidate_details {
+                if let Some(reason) = detail.rejected {
+                    let doc_id = detail.section_id;
+                    eprintln!("  \x1B[1;33mCandidate {} rejected:\x1B[0m {:?}", doc_id, reason);
+                    
+                    let doc_idx = doc_id as usize;
+                    if doc_idx < self.sections.len() {
+                        let sec = &self.sections[doc_idx];
+                        eprintln!("     - Header: {:?}", sec.title);
+                        eprintln!("     - Body Snippet: {:?}", if sec.body.len() > 100 { format!("{}...", &sec.body[..100]) } else { sec.body.clone() });
+                        
+                        let title_tokens = tokenize(&sec.title);
+                        let body_tokens = tokenize(&sec.body);
+                        
+                        let title_terms: Vec<String> = title_tokens.iter().map(|t| String::from_utf8_lossy(&t.bytes).to_string()).collect();
+                        let body_terms: Vec<String> = body_tokens.iter().map(|t| String::from_utf8_lossy(&t.bytes).to_string()).collect();
+                        
+                        eprintln!("     - Title Tokens: {:?}", title_terms);
+                        eprintln!("     - Body Tokens: {:?}", body_terms);
+                        
+                        let pf = &self.prime_filters[doc_idx];
+                        
+                        eprintln!("     - Token-by-Token Query Evaluation:");
+                        for q_tok in &query_tokens {
+                            let term_str = String::from_utf8_lossy(&q_tok.bytes);
+                            let prime_match = pf.test_term(&q_tok.bytes);
+                            
+                            let title_tf = self.title_tfs[doc_idx].get(&q_tok.bytes).copied().unwrap_or(0);
+                            let body_tf = self.body_tfs[doc_idx].get(&q_tok.bytes).copied().unwrap_or(0);
+                            
+                            eprintln!(
+                                "       * Term '{}' -> Prime Filter Match: {} | Title TF: {} | Body TF: {}",
+                                term_str, prime_match, title_tf, body_tf
+                            );
+                        }
+                    }
+                }
+            }
+            eprintln!();
+        }
+
         hits.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
         hits
     }

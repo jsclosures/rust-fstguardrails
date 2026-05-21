@@ -13,7 +13,7 @@ use std::env;
 use std::io::{self, Read};
 use std::process;
 
-use text_tagger::Tagger;
+use lume::Tagger;
 
 fn main() {
     let mut args: Vec<String> = env::args().skip(1).collect();

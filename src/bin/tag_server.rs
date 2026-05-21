@@ -28,7 +28,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Instant;
 
-use text_tagger::{Tag, Tagger};
+use lume::{Tag, Tagger};
 
 fn main() {
     let mut args: Vec<String> = env::args().skip(1).collect();

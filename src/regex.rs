@@ -441,6 +441,60 @@ impl NfaBuilder {
     }
 }
 
+/// Automatically expands a query term into a Levenshtein regex pattern
+/// representing 1-character edits and transpositions.
+/// For example, "htis" -> "htis|this|tis|his|h.is|ht.s" (and other 1-edit/swap variants).
+pub fn levenshtein_regex(term: &str) -> String {
+    let chars: Vec<char> = term.chars().collect();
+    let n = chars.len();
+    if n == 0 {
+        return String::new();
+    }
+    
+    let mut patterns = std::collections::HashSet::new();
+    
+    // 1. Exact term
+    patterns.insert(term.to_string());
+    
+    // 2. Deletions (distance 1)
+    for i in 0..n {
+        let mut p = Vec::with_capacity(n - 1);
+        p.extend_from_slice(&chars[..i]);
+        p.extend_from_slice(&chars[i+1..]);
+        let s: String = p.into_iter().collect();
+        if !s.is_empty() {
+            patterns.insert(s);
+        }
+    }
+    
+    // 3. Substitutions with wildcard '.' (distance 1)
+    for i in 0..n {
+        let mut p = chars.clone();
+        p[i] = '.';
+        patterns.insert(p.into_iter().collect());
+    }
+    
+    // 4. Insertions of wildcard '.' (distance 1)
+    for i in 0..=n {
+        let mut p = Vec::with_capacity(n + 1);
+        p.extend_from_slice(&chars[..i]);
+        p.push('.');
+        p.extend_from_slice(&chars[i..]);
+        patterns.insert(p.into_iter().collect());
+    }
+    
+    // 5. Transpositions (adjacent character swaps, distance 2/1 transposition)
+    for i in 0..n-1 {
+        let mut p = chars.clone();
+        p.swap(i, i + 1);
+        patterns.insert(p.into_iter().collect());
+    }
+    
+    let mut sorted_patterns: Vec<String> = patterns.into_iter().collect();
+    sorted_patterns.sort();
+    sorted_patterns.join("|")
+}
+
 impl Nfa {
     pub fn compile(pattern: &str) -> Result<Self, String> {
         let mut parser = Parser::new(pattern);
@@ -639,5 +693,26 @@ mod tests {
         
         let nfa_neg = Nfa::compile("[^a-z]").unwrap();
         assert_eq!(nfa_neg.matches("a B c"), vec![(1, 2), (2, 3), (3, 4)]);
+    }
+
+    #[test]
+    fn test_levenshtein_regex_expansion() {
+        let pattern = levenshtein_regex("htis");
+        
+        // Assert that the generated pattern contains key illustrative edits
+        assert!(pattern.contains("htis"));
+        assert!(pattern.contains("this"));
+        assert!(pattern.contains("tis"));
+        assert!(pattern.contains("his"));
+        assert!(pattern.contains("h.is"));
+        assert!(pattern.contains("ht.s"));
+        
+        let nfa = Nfa::compile(&pattern).unwrap();
+        
+        // The NFA should match all these spelling-corrected variants
+        assert!(!nfa.matches("this").is_empty());
+        assert!(!nfa.matches("tis").is_empty());
+        assert!(!nfa.matches("his").is_empty());
+        assert!(!nfa.matches("htis").is_empty());
     }
 }
