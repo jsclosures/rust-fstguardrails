@@ -23,6 +23,24 @@ struct HighlightSpan {
 }
 
 fn main() {
+    std::panic::set_hook(Box::new(|info| {
+        let msg = if let Some(s) = info.payload().downcast_ref::<&str>() {
+            Some(*s)
+        } else if let Some(s) = info.payload().downcast_ref::<String>() {
+            Some(s.as_str())
+        } else {
+            None
+        };
+        
+        if let Some(m) = msg {
+            if m.contains("failed printing to stdout") || m.contains("The pipe is being closed") || m.contains("BrokenPipe") {
+                std::process::exit(0);
+            }
+        }
+        
+        eprintln!("{}", info);
+    }));
+
     let mut args: Vec<String> = env::args().skip(1).collect();
 
     // Determine scoring params from environment variables
