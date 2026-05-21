@@ -261,15 +261,30 @@ fn get_snippet_and_spans(
     let start_char = first_span.start;
     
     let mut window_start = if start_char > 100 { start_char - 100 } else { 0 };
-    // Find nearest space/newline backwards
-    while window_start > 0 && &text[window_start..window_start+1] != " " && &text[window_start..window_start+1] != "\n" {
+    
+    // Align window_start to a valid UTF-8 character boundary walking backward
+    while window_start > 0 && !text.is_char_boundary(window_start) {
         window_start -= 1;
     }
-    if window_start > 0 {
-        window_start += 1;
+    
+    // Find nearest space/newline backwards
+    while window_start > 0 {
+        let mut prev = window_start - 1;
+        while prev > 0 && !text.is_char_boundary(prev) {
+            prev -= 1;
+        }
+        let ch = text[prev..window_start].chars().next().unwrap();
+        if ch.is_whitespace() {
+            break;
+        }
+        window_start = prev;
     }
     
-    let window_end = (window_start + 400).min(text.len());
+    let mut window_end = (window_start + 400).min(text.len());
+    while window_end < text.len() && !text.is_char_boundary(window_end) {
+        window_end += 1;
+    }
+    
     let snippet = text[window_start..window_end].to_string();
     
     let mut shifted_spans = Vec::new();
