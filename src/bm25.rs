@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use crate::tokenize;
+use crate::fast_retrieval::{MiniRoaring, PrimeFilter};
+use crate::Tagger;
 
 /// Represents a section parsed from a Markdown document.
 #[derive(Debug, Clone)]
@@ -60,6 +62,10 @@ pub struct Bm25Index {
     // Corpus-wide document frequencies: token bytes -> number of docs containing it
     pub title_dfs: HashMap<Vec<u8>, usize>,
     pub body_dfs: HashMap<Vec<u8>, usize>,
+
+    // Native roaring bitmaps and prime/Gödel partitioned signature filters
+    pub posting_lists: HashMap<Vec<u8>, MiniRoaring>,
+    pub prime_filters: Vec<PrimeFilter>,
 }
 
 /// A hit returned by the search query.
@@ -117,7 +123,7 @@ pub fn parse_markdown(content: &str) -> Vec<Section> {
 
 impl Bm25Index {
     /// Constructs a search index over a collection of Markdown sections.
-    pub fn build(sections: Vec<Section>) -> Self {
+    pub fn build(sections: Vec<Section>, tagger: Option<&Tagger>) -> Self {
         let num_docs = sections.len();
         let mut title_tfs = Vec::with_capacity(num_docs);
         let mut body_tfs = Vec::with_capacity(num_docs);
@@ -130,7 +136,11 @@ impl Bm25Index {
         let mut total_title_len = 0;
         let mut total_body_len = 0;
 
-        for sec in &sections {
+        let mut posting_lists: HashMap<Vec<u8>, MiniRoaring> = HashMap::new();
+        let mut prime_filters = Vec::with_capacity(num_docs);
+
+        for (doc_idx, sec) in sections.iter().enumerate() {
+            let doc_id = doc_idx as u32;
             let t_toks = tokenize(&sec.title);
             let b_toks = tokenize(&sec.body);
             
@@ -141,8 +151,9 @@ impl Bm25Index {
             
             // Build Title TF
             let mut t_tf = HashMap::new();
-            for tok in t_toks {
-                *t_tf.entry(tok.bytes).or_insert(0) += 1;
+            for tok in &t_toks {
+                *t_tf.entry(tok.bytes.clone()).or_insert(0) += 1;
+                posting_lists.entry(tok.bytes.clone()).or_insert_with(MiniRoaring::new).insert(doc_id);
             }
             for tok_bytes in t_tf.keys() {
                 *title_dfs.entry(tok_bytes.clone()).or_insert(0) += 1;
@@ -151,13 +162,35 @@ impl Bm25Index {
             
             // Build Body TF
             let mut b_tf = HashMap::new();
-            for tok in b_toks {
-                *b_tf.entry(tok.bytes).or_insert(0) += 1;
+            for tok in &b_toks {
+                *b_tf.entry(tok.bytes.clone()).or_insert(0) += 1;
+                posting_lists.entry(tok.bytes.clone()).or_insert_with(MiniRoaring::new).insert(doc_id);
             }
             for tok_bytes in b_tf.keys() {
                 *body_dfs.entry(tok_bytes.clone()).or_insert(0) += 1;
             }
             body_tfs.push(b_tf);
+
+            // Compute PrimeFilter signatures
+            let mut pf = PrimeFilter::new();
+            for tok in &t_toks {
+                pf.add_term(&tok.bytes);
+            }
+            for tok in &b_toks {
+                pf.add_term(&tok.bytes);
+            }
+
+            if let Some(t) = tagger {
+                let title_tags = t.tag(&sec.title);
+                for tag in title_tags {
+                    pf.add_tag_kind(&tag.kind);
+                }
+                let body_tags = t.tag(&sec.body);
+                for tag in body_tags {
+                    pf.add_tag_kind(&tag.kind);
+                }
+            }
+            prime_filters.push(pf);
         }
         
         let avg_title_len = if num_docs > 0 {
@@ -183,6 +216,8 @@ impl Bm25Index {
             avg_body_len,
             title_dfs,
             body_dfs,
+            posting_lists,
+            prime_filters,
         }
     }
 
@@ -192,46 +227,122 @@ impl Bm25Index {
         query: &str,
         variant: SearchVariant,
         params: &Bm25Params,
+        tagger: Option<&Tagger>,
     ) -> Vec<SearchHit> {
         let query_tokens = tokenize(query);
         if query_tokens.is_empty() || self.num_docs == 0 {
             return Vec::new();
         }
         
+        let start_pruning = std::time::Instant::now();
+
+        // 1. Gather all candidates using union of query term roaring bitmaps
+        let mut candidate_set = MiniRoaring::new();
+        let mut first = true;
+        for q_tok in &query_tokens {
+            if let Some(list) = self.posting_lists.get(&q_tok.bytes) {
+                if first {
+                    candidate_set = list.clone();
+                    first = false;
+                } else {
+                    candidate_set = candidate_set.union(list);
+                }
+            }
+        }
+
+        let candidate_ids = candidate_set.iter();
+        let num_candidates_roaring = candidate_ids.len();
+
+        // 2. Further prune using Gödel tag signatures if query has tagged entities
+        let mut query_tag_primes = Vec::new();
+        if let Some(t) = tagger {
+            let query_tags = t.tag(query);
+            for tag in &query_tags {
+                let h = crate::fast_retrieval::fnv1a_hash(tag.kind.as_bytes());
+                let prime_idx = (h as usize) % crate::fast_retrieval::PRIMES.len();
+                let prime = crate::fast_retrieval::PRIMES[prime_idx] as u128;
+                query_tag_primes.push(prime);
+            }
+        }
+
+        let mut pruned_candidates = Vec::with_capacity(num_candidates_roaring);
+        for doc_id in candidate_ids {
+            let doc_idx = doc_id as usize;
+            let pf = &self.prime_filters[doc_idx];
+            
+            // Tag signature verification: Candidate must contain all query tag kinds if present
+            let mut tag_match = true;
+            for &prime in &query_tag_primes {
+                if pf.tag_signature % prime != 0 {
+                    tag_match = false;
+                    break;
+                }
+            }
+            if tag_match {
+                pruned_candidates.push(doc_idx);
+            }
+        }
+
+        let pruning_elapsed = start_pruning.elapsed();
+        println!(
+            "\x1B[32m[Two-Stage Pruning] Pruned candidate space from {} to {} (roaring generated: {}) sections in {:.2?}\x1B[0m",
+            self.num_docs, pruned_candidates.len(), num_candidates_roaring, pruning_elapsed
+        );
+
+        // Stage 2: Heavy Scoring on active candidates only
         let mut hits = Vec::new();
         
-        for doc_idx in 0..self.num_docs {
+        for &doc_idx in &pruned_candidates {
             let mut total_score = 0.0;
+            let pf = &self.prime_filters[doc_idx];
             
             for q_tok in &query_tokens {
                 let tok_bytes = &q_tok.bytes;
                 
                 // 1. Title Contribution
                 let title_score = {
-                    let tf = self.title_tfs[doc_idx].get(tok_bytes).copied().unwrap_or(0) as f64;
-                    let df = self.title_dfs.get(tok_bytes).copied().unwrap_or(0);
-                    
-                    let idf = ((self.num_docs as f64 - df as f64 + 0.5) / (df as f64 + 0.5) + 1.0).ln();
-                    let idf = idf.max(0.0);
-                    
-                    let doc_len = self.title_lens[doc_idx] as f64;
-                    let avgdl = self.avg_title_len;
-                    
-                    calculate_bm25_term_score(tf, doc_len, avgdl, idf, variant, params)
+                    // Check prime filter first for fast signature membership test
+                    if pf.test_term(tok_bytes) {
+                        let tf = self.title_tfs[doc_idx].get(tok_bytes).copied().unwrap_or(0) as f64;
+                        if tf > 0.0 {
+                            let df = self.title_dfs.get(tok_bytes).copied().unwrap_or(0);
+                            
+                            let idf = ((self.num_docs as f64 - df as f64 + 0.5) / (df as f64 + 0.5) + 1.0).ln();
+                            let idf = idf.max(0.0);
+                            
+                            let doc_len = self.title_lens[doc_idx] as f64;
+                            let avgdl = self.avg_title_len;
+                            
+                            calculate_bm25_term_score(tf, doc_len, avgdl, idf, variant, params)
+                        } else {
+                            0.0
+                        }
+                    } else {
+                        0.0
+                    }
                 };
                 
                 // 2. Body Contribution
                 let body_score = {
-                    let tf = self.body_tfs[doc_idx].get(tok_bytes).copied().unwrap_or(0) as f64;
-                    let df = self.body_dfs.get(tok_bytes).copied().unwrap_or(0);
-                    
-                    let idf = ((self.num_docs as f64 - df as f64 + 0.5) / (df as f64 + 0.5) + 1.0).ln();
-                    let idf = idf.max(0.0);
-                    
-                    let doc_len = self.body_lens[doc_idx] as f64;
-                    let avgdl = self.avg_body_len;
-                    
-                    calculate_bm25_term_score(tf, doc_len, avgdl, idf, variant, params)
+                    // Check prime filter first for fast signature membership test
+                    if pf.test_term(tok_bytes) {
+                        let tf = self.body_tfs[doc_idx].get(tok_bytes).copied().unwrap_or(0) as f64;
+                        if tf > 0.0 {
+                            let df = self.body_dfs.get(tok_bytes).copied().unwrap_or(0);
+                            
+                            let idf = ((self.num_docs as f64 - df as f64 + 0.5) / (df as f64 + 0.5) + 1.0).ln();
+                            let idf = idf.max(0.0);
+                            
+                            let doc_len = self.body_lens[doc_idx] as f64;
+                            let avgdl = self.avg_body_len;
+                            
+                            calculate_bm25_term_score(tf, doc_len, avgdl, idf, variant, params)
+                        } else {
+                            0.0
+                        }
+                    } else {
+                        0.0
+                    }
                 };
                 
                 total_score += params.title_weight * title_score + params.body_weight * body_score;

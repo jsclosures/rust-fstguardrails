@@ -92,7 +92,7 @@ fn main() {
     // Index Markdown
     let start_indexing = Instant::now();
     let sections = parse_markdown(&md_content);
-    let index = Bm25Index::build(sections);
+    let index = Bm25Index::build(sections, tagger.as_ref());
     let index_time = start_indexing.elapsed();
     eprintln!(
         "\x1B[32mIndexed {} Markdown sections in {:.2?}\x1B[0m",
@@ -133,8 +133,34 @@ fn execute_search(
         }
     }
 
+    // Pairwise Jaccard index between query terms' posting lists
+    let query_tokens = tokenize(query);
+    if query_tokens.len() > 1 {
+        println!("  \x1B[35m└─ Query Term Posting List Jaccard Similarities:\x1B[0m");
+        for i in 0..query_tokens.len() {
+            for j in i+1..query_tokens.len() {
+                let term_a = &query_tokens[i].bytes;
+                let term_b = &query_tokens[j].bytes;
+                let str_a = String::from_utf8_lossy(term_a);
+                let str_b = String::from_utf8_lossy(term_b);
+                let list_a = index.posting_lists.get(term_a);
+                let list_b = index.posting_lists.get(term_b);
+                match (list_a, list_b) {
+                    (Some(la), Some(lb)) => {
+                        let jaccard = la.jaccard_similarity(lb);
+                        println!("     - '{}' vs '{}': {:.4} (Intersection: {}, Union: {})", 
+                            str_a, str_b, jaccard, la.intersect(lb).len(), la.union(lb).len());
+                    }
+                    _ => {
+                        println!("     - '{}' vs '{}': 0.0000 (One or both terms not found)", str_a, str_b);
+                    }
+                }
+            }
+        }
+    }
+
     let start_search = Instant::now();
-    let hits = index.search(query, variant, params);
+    let hits = index.search(query, variant, params, tagger);
     let elapsed = start_search.elapsed();
 
     println!("\x1B[34mFound {} ranked results in {:.2?}\x1B[0m\n", hits.len(), elapsed);
