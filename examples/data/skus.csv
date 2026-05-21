@@ -1,0 +1,3 @@
+phrase,action,is_regex
+SKU-\d{5},SKU,true
+MC-\d{4},BOOK,true

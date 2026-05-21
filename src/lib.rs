@@ -24,6 +24,7 @@ use tantivy_fst::MapBuilder;
 pub mod bm25;
 pub mod fast_retrieval;
 pub mod semantic_mesh;
+pub mod regex;
 
 /// Token separator used inside FST keys. Matches Lucene's
 /// `ConcatenateGraphFilter.SEP_LABEL` (U+001E).
@@ -39,6 +40,7 @@ pub struct Entry {
     pub kind: String,
     pub id: String,
     pub output: Option<String>,
+    pub is_regex: bool,
 }
 
 impl Entry {
@@ -52,11 +54,17 @@ impl Entry {
             kind: kind.into(),
             id: id.into(),
             output: None,
+            is_regex: false,
         }
     }
 
     pub fn with_output(mut self, output: impl Into<String>) -> Self {
         self.output = Some(output.into());
+        self
+    }
+
+    pub fn with_regex(mut self, is_regex: bool) -> Self {
+        self.is_regex = is_regex;
         self
     }
 }
@@ -98,6 +106,7 @@ pub struct Tagger {
     fst: Fst<Vec<u8>>,
     /// FST value -> all records sharing that key (synonyms collapse here).
     groups: Vec<Vec<MetaRecord>>,
+    regex_patterns: Vec<(crate::regex::Nfa, MetaRecord)>,
 }
 
 impl Tagger {
@@ -106,23 +115,44 @@ impl Tagger {
     where
         I: IntoIterator<Item = Entry>,
     {
+        let mut static_entries = Vec::new();
+        let mut regex_patterns = Vec::new();
+
+        for e in entries {
+            let is_regex = e.is_regex || auto_detect_regex(&e.phrase);
+            let output = e.output.clone().unwrap_or_else(|| derive_output(&e.phrase));
+            let meta = MetaRecord {
+                kind: e.kind.clone(),
+                id: e.id.clone(),
+                output,
+            };
+
+            if is_regex {
+                match crate::regex::Nfa::compile(&e.phrase) {
+                    Ok(nfa) => {
+                        regex_patterns.push((nfa, meta));
+                    }
+                    Err(err) => {
+                        return Err(io::Error::new(
+                            io::ErrorKind::InvalidInput,
+                            format!("Failed to compile regex '{}': {}", e.phrase, err),
+                        ));
+                    }
+                }
+            } else {
+                static_entries.push((e, meta));
+            }
+        }
+
         // Normalize each phrase to its FST key bytes, drop empties.
-        let mut prepared: Vec<(Vec<u8>, MetaRecord)> = entries
+        let mut prepared: Vec<(Vec<u8>, MetaRecord)> = static_entries
             .into_iter()
-            .filter_map(|e| {
+            .filter_map(|(e, meta)| {
                 let key = normalize_key(&e.phrase);
                 if key.is_empty() {
                     return None;
                 }
-                let output = e.output.unwrap_or_else(|| derive_output(&e.phrase));
-                Some((
-                    key,
-                    MetaRecord {
-                        kind: e.kind,
-                        id: e.id,
-                        output,
-                    },
-                ))
+                Some((key, meta))
             })
             .collect();
 
@@ -161,7 +191,7 @@ impl Tagger {
             .into_inner()
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
         let fst = Fst::new(bytes).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-        Ok(Self { fst, groups })
+        Ok(Self { fst, groups, regex_patterns })
     }
 
     /// Number of distinct FST keys.
@@ -254,6 +284,9 @@ impl Tagger {
             let action_col = headers
                 .iter()
                 .position(|h| h.trim().eq_ignore_ascii_case("action"));
+            let is_regex_col = headers
+                .iter()
+                .position(|h| h.trim().eq_ignore_ascii_case("is_regex"));
 
             for raw in lines {
                 let cells = parse_csv_line(raw);
@@ -266,8 +299,13 @@ impl Tagger {
                     .map(|s| s.trim())
                     .filter(|s| !s.is_empty())
                     .map(|s| s.to_string());
+                let is_regex_val = is_regex_col
+                    .and_then(|i| cells.get(i))
+                    .map(|s| s.trim().eq_ignore_ascii_case("true"))
+                    .unwrap_or(false);
 
-                let mut entry = Entry::new(phrase, kind.clone(), uuid_v4());
+                let mut entry = Entry::new(phrase, kind.clone(), uuid_v4())
+                    .with_regex(is_regex_val);
                 if let Some(o) = output_override {
                     entry = entry.with_output(o);
                 }
@@ -293,17 +331,13 @@ impl Tagger {
 
     /// Tag with an explicit overlap policy.
     pub fn tag_with(&self, text: &str, policy: OverlapPolicy) -> Vec<Tag> {
-        let tokens = tokenize(text);
         let mut out: Vec<Tag> = Vec::new();
-        let mut skip_until: usize = 0;
 
+        // 1. Run FST dictionary matching (extracting all possible matches)
+        let tokens = tokenize(text);
         for i in 0..tokens.len() {
-            if policy == OverlapPolicy::LongestOnly && i < skip_until {
-                continue;
-            }
             let mut node: Node = self.fst.root();
             let mut output: Output = Output::zero();
-            let mut longest: Option<(usize, u64)> = None;
 
             for j in i..tokens.len() {
                 if j > i {
@@ -335,20 +369,42 @@ impl Tagger {
 
                 if node.is_final() {
                     let idx = output.cat(node.final_output()).value();
-                    match policy {
-                        OverlapPolicy::All => self.emit(&mut out, &tokens, i, j, idx, text),
-                        OverlapPolicy::LongestOnly => longest = Some((j, idx)),
-                    }
+                    self.emit(&mut out, &tokens, i, j, idx, text);
                 }
-            }
-
-            if let (OverlapPolicy::LongestOnly, Some((j, idx))) = (policy, longest) {
-                self.emit(&mut out, &tokens, i, j, idx, text);
-                skip_until = j + 1;
             }
         }
 
-        out
+        // 2. Run NFA Regex matching
+        for (nfa, meta) in &self.regex_patterns {
+            let char_spans = nfa.matches(text);
+            let byte_spans = char_to_byte_offsets(text, &char_spans);
+            for (start_byte, end_byte) in byte_spans {
+                let surface = text[start_byte..end_byte].to_string();
+                out.push(Tag {
+                    start: start_byte,
+                    end: end_byte,
+                    surface,
+                    id: meta.id.clone(),
+                    kind: meta.kind.clone(),
+                    output: meta.output.clone(),
+                });
+            }
+        }
+
+        // 3. Resolve overlaps if policy is LongestOnly
+        match policy {
+            OverlapPolicy::All => {
+                out.sort_by(|a, b| {
+                    a.start.cmp(&b.start).then_with(|| {
+                        let len_a = a.end - a.start;
+                        let len_b = b.end - b.start;
+                        len_b.cmp(&len_a)
+                    })
+                });
+                out
+            }
+            OverlapPolicy::LongestOnly => resolve_longest_only(out),
+        }
     }
 
     fn emit(
@@ -374,6 +430,60 @@ impl Tagger {
             });
         }
     }
+}
+
+fn char_to_byte_offsets(text: &str, char_spans: &[(usize, usize)]) -> Vec<(usize, usize)> {
+    let char_boundaries: Vec<usize> = text.char_indices().map(|(idx, _)| idx).collect();
+    let mut byte_spans = Vec::new();
+    for &(start_char, end_char) in char_spans {
+        let start_byte = if start_char < char_boundaries.len() {
+            char_boundaries[start_char]
+        } else {
+            text.len()
+        };
+        let end_byte = if end_char < char_boundaries.len() {
+            char_boundaries[end_char]
+        } else {
+            text.len()
+        };
+        byte_spans.push((start_byte, end_byte));
+    }
+    byte_spans
+}
+
+fn resolve_longest_only(mut tags: Vec<Tag>) -> Vec<Tag> {
+    if tags.is_empty() {
+        return Vec::new();
+    }
+    tags.sort_by(|a, b| {
+        a.start.cmp(&b.start).then_with(|| {
+            let len_a = a.end - a.start;
+            let len_b = b.end - b.start;
+            len_b.cmp(&len_a)
+        }).then_with(|| {
+            a.id.cmp(&b.id)
+        })
+    });
+    
+    let mut resolved = Vec::new();
+    let mut last_end = 0;
+    let mut last_accepted_start = None;
+    let mut last_accepted_end = None;
+    
+    for tag in tags {
+        let is_exact_same_span = Some(tag.start) == last_accepted_start && Some(tag.end) == last_accepted_end;
+        if tag.start >= last_end || is_exact_same_span {
+            last_end = tag.end;
+            last_accepted_start = Some(tag.start);
+            last_accepted_end = Some(tag.end);
+            resolved.push(tag);
+        }
+    }
+    resolved
+}
+
+fn auto_detect_regex(phrase: &str) -> bool {
+    phrase.chars().any(|c| matches!(c, '[' | ']' | '\\' | '*' | '+' | '?' | '|' | '(' | ')'))
 }
 
 fn step<'a>(
@@ -694,5 +804,29 @@ mod tests {
         assert_eq!(tags[0].id.len(), 36, "UUID v4 id");
 
         let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn regex_and_fst_hybrid_tagging() {
+        let tagger = Tagger::build(vec![
+            Entry::new("SKU", "TAG", "static_sku"),
+            Entry::new("SKU-\\d{5}", "PRODUCT", "regex_sku"),
+            Entry::new("MC-\\d{4}", "BOOK", "regex_book"),
+        ])
+        .unwrap();
+
+        // Standard tagging (longest match wins):
+        // "SKU-12345" matches both static "SKU" (5..8) and regex "SKU-\d{5}" (5..14).
+        // "SKU-\d{5}" is longer, so it should cleanly win and suppress the static match!
+        let tags = tagger.tag("item SKU-12345 and MC-9876 are listed");
+        assert_eq!(tags.len(), 2);
+        
+        assert_eq!(tags[0].surface, "SKU-12345");
+        assert_eq!(tags[0].id, "regex_sku");
+        assert_eq!(tags[0].kind, "PRODUCT");
+
+        assert_eq!(tags[1].surface, "MC-9876");
+        assert_eq!(tags[1].id, "regex_book");
+        assert_eq!(tags[1].kind, "BOOK");
     }
 }
