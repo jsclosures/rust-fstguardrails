@@ -66,6 +66,11 @@ pub struct Bm25Index {
     // Native roaring bitmaps and prime/Gödel partitioned signature filters
     pub posting_lists: HashMap<Vec<u8>, MiniRoaring>,
     pub prime_filters: Vec<PrimeFilter>,
+
+    // Entity information for Semantic Mesh (Option A)
+    pub entity_posting_lists: HashMap<String, MiniRoaring>,
+    pub entity_kinds: HashMap<String, String>,
+    pub entity_labels: HashMap<String, String>,
 }
 
 /// A hit returned by the search query.
@@ -139,6 +144,10 @@ impl Bm25Index {
         let mut posting_lists: HashMap<Vec<u8>, MiniRoaring> = HashMap::new();
         let mut prime_filters = Vec::with_capacity(num_docs);
 
+        let mut entity_posting_lists: HashMap<String, MiniRoaring> = HashMap::new();
+        let mut entity_kinds = HashMap::new();
+        let mut entity_labels = HashMap::new();
+
         for (doc_idx, sec) in sections.iter().enumerate() {
             let doc_id = doc_idx as u32;
             let t_toks = tokenize(&sec.title);
@@ -184,10 +193,58 @@ impl Bm25Index {
                 let title_tags = t.tag(&sec.title);
                 for tag in title_tags {
                     pf.add_tag_kind(&tag.kind);
+                    
+                    // Track for semantic mesh (Option A)
+                    entity_posting_lists
+                        .entry(tag.output.clone())
+                        .or_insert_with(MiniRoaring::new)
+                        .insert(doc_id);
+                    entity_kinds.insert(tag.output.clone(), tag.kind.clone());
+                    
+                    // Keep the best version of the surface label (longer / capitalized)
+                    let entry = entity_labels.entry(tag.output.clone());
+                    match entry {
+                        std::collections::hash_map::Entry::Vacant(v) => {
+                            v.insert(tag.surface.clone());
+                        }
+                        std::collections::hash_map::Entry::Occupied(mut o) => {
+                            let curr = o.get();
+                            let is_better = (tag.surface.chars().next().map_or(false, |c| c.is_uppercase()) &&
+                                            !curr.chars().next().map_or(false, |c| c.is_uppercase())) ||
+                                            tag.surface.len() > curr.len();
+                            if is_better {
+                                o.insert(tag.surface.clone());
+                            }
+                        }
+                    }
                 }
                 let body_tags = t.tag(&sec.body);
                 for tag in body_tags {
                     pf.add_tag_kind(&tag.kind);
+                    
+                    // Track for semantic mesh (Option A)
+                    entity_posting_lists
+                        .entry(tag.output.clone())
+                        .or_insert_with(MiniRoaring::new)
+                        .insert(doc_id);
+                    entity_kinds.insert(tag.output.clone(), tag.kind.clone());
+                    
+                    // Keep the best version of the surface label (longer / capitalized)
+                    let entry = entity_labels.entry(tag.output.clone());
+                    match entry {
+                        std::collections::hash_map::Entry::Vacant(v) => {
+                            v.insert(tag.surface.clone());
+                        }
+                        std::collections::hash_map::Entry::Occupied(mut o) => {
+                            let curr = o.get();
+                            let is_better = (tag.surface.chars().next().map_or(false, |c| c.is_uppercase()) &&
+                                            !curr.chars().next().map_or(false, |c| c.is_uppercase())) ||
+                                            tag.surface.len() > curr.len();
+                            if is_better {
+                                o.insert(tag.surface.clone());
+                            }
+                        }
+                    }
                 }
             }
             prime_filters.push(pf);
@@ -218,6 +275,9 @@ impl Bm25Index {
             body_dfs,
             posting_lists,
             prime_filters,
+            entity_posting_lists,
+            entity_kinds,
+            entity_labels,
         }
     }
 

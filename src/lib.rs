@@ -23,6 +23,7 @@ use tantivy_fst::MapBuilder;
 
 pub mod bm25;
 pub mod fast_retrieval;
+pub mod semantic_mesh;
 
 /// Token separator used inside FST keys. Matches Lucene's
 /// `ConcatenateGraphFilter.SEP_LABEL` (U+001E).

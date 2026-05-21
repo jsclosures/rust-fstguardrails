@@ -99,14 +99,79 @@ fn main() {
         index.num_docs, index_time
     );
 
-    // If query terms are passed as args, execute one-shot search
+    // If query terms are passed as args, check for specialized commands or execute one-shot search
     if !args.is_empty() {
-        let query = args.join(" ");
-        execute_search(&index, tagger.as_ref(), &query, variant, &params);
+        let cmd = args[0].trim().to_lowercase();
+        if cmd == "graph" {
+            let min_similarity = args.get(1).and_then(|s| s.parse::<f64>().ok()).unwrap_or(0.02);
+            execute_graph(&index, min_similarity);
+        } else if cmd == "generate" {
+            let seed = args.get(1).map(|s| s.as_str());
+            execute_generate(&index, seed);
+        } else {
+            let query = args.join(" ");
+            execute_search(&index, tagger.as_ref(), &query, variant, &params);
+        }
     } else {
         // Run Interactive REPL loop
         run_repl(&index, tagger.as_ref(), variant, &params);
     }
+}
+
+fn execute_graph(index: &Bm25Index, min_similarity: f64) {
+    use text_tagger::semantic_mesh::EntityGraph;
+    
+    println!("\x1B[1;34mGenerating Semantic Entity Graph (Minimum Similarity: {:.4})...\x1B[0m", min_similarity);
+    let start = Instant::now();
+    let graph = EntityGraph::build(
+        &index.entity_posting_lists,
+        &index.entity_kinds,
+        &index.entity_labels,
+        min_similarity,
+    );
+    let elapsed = start.elapsed();
+    
+    // Print ASCII table
+    graph.print_ascii_table();
+    
+    // Serialize to JSON and write to file
+    let json_content = graph.to_json();
+    let file_path = "monte_cristo_graph.json";
+    match fs::write(file_path, json_content) {
+        Ok(_) => {
+            println!(
+                "\x1B[32mSuccessfully wrote relationship mesh ({} nodes, {} edges) to '{}' in {:.2?}\x1B[0m",
+                graph.nodes.len(),
+                graph.edges.len(),
+                file_path,
+                elapsed
+            );
+        }
+        Err(e) => {
+            eprintln!("\x1B[1;31mFailed to write graph to '{}':\x1B[0m {}", file_path, e);
+        }
+    }
+}
+
+fn execute_generate(index: &Bm25Index, seed: Option<&str>) {
+    use text_tagger::semantic_mesh::MarkovChain;
+    
+    println!("\x1B[1;34mBuilding Trigram Markov Chain Model...\x1B[0m");
+    let start_build = Instant::now();
+    let bodies: Vec<&str> = index.sections.iter().map(|s| s.body.as_str()).collect();
+    let chain = MarkovChain::build(&bodies);
+    let build_elapsed = start_build.elapsed();
+    println!("\x1B[32mBuilt Markov Chain ({} transition keys) in {:.2?}\x1B[0m", chain.transitions.len(), build_elapsed);
+    
+    println!("\x1B[1;34mGenerating Dumas-styled passage...\x1B[0m");
+    let start_gen = Instant::now();
+    let text = chain.generate(seed, 150);
+    let gen_elapsed = start_gen.elapsed();
+    
+    println!();
+    println!("\x1B[1;36m\"{}\"\x1B[0m", text);
+    println!();
+    println!("\x1B[32mGenerated passage in {:.2?}\x1B[0m", gen_elapsed);
 }
 
 fn execute_search(
@@ -230,7 +295,11 @@ fn run_repl(
     println!("     \x1B[36m▀▀▀▀▀▀       Field-Aware BM25 + FST Entity Tagger\x1B[0m");
     println!("    \x1B[1;34m▀▀▀▀▀▀▀▀      Zero External Dependencies (StdLib Only)\x1B[0m");
     println!("────────────────────────────────────────────────────────────");
-    println!("Type your search query and press Enter. Type 'exit' or 'quit' to end.");
+    println!("Commands:");
+    println!("  - Type a query to search the BM25 FST mesh.");
+    println!("  - Type \x1B[1mgraph [min_sim]\x1B[0m to compute entity graph & write JSON.");
+    println!("  - Type \x1B[1mgenerate [seed]\x1B[0m to generate text styled in Dumas' voice.");
+    println!("  - Type \x1B[1mexit\x1B[0m or \x1B[1mquit\x1B[0m to end.");
     println!();
 
     let mut stdout = io::stdout();
@@ -250,6 +319,23 @@ fn run_repl(
         }
         if query == "exit" || query == "quit" {
             break;
+        }
+
+        // Check for special REPL commands
+        let parts: Vec<&str> = query.split_whitespace().collect();
+        if !parts.is_empty() {
+            let cmd = parts[0].to_lowercase();
+            if cmd == "graph" {
+                let min_similarity = parts.get(1).and_then(|s| s.parse::<f64>().ok()).unwrap_or(0.02);
+                execute_graph(index, min_similarity);
+                println!();
+                continue;
+            } else if cmd == "generate" {
+                let seed = parts.get(1).map(|s| *s);
+                execute_generate(index, seed);
+                println!();
+                continue;
+            }
         }
 
         execute_search(index, tagger, query, variant, params);
