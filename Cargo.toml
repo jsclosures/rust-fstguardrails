@@ -1,0 +1,20 @@
+[package]
+name = "text-tagger"
+version = "0.1.0"
+edition = "2021"
+description = "A simple FST-based text tagger in Rust, inspired by Lucene's SolrTextTagger."
+
+[dependencies]
+tantivy-fst = "0.5"
+
+[[bin]]
+name = "tag"
+path = "src/bin/tag.rs"
+
+[[bin]]
+name = "tag-server"
+path = "src/bin/tag_server.rs"
+
+[profile.release]
+lto = true
+codegen-units = 1
