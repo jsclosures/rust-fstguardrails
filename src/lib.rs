@@ -21,6 +21,8 @@ use std::path::Path;
 use tantivy_fst::raw::{Fst, Node, Output};
 use tantivy_fst::MapBuilder;
 
+pub mod bm25;
+
 /// Token separator used inside FST keys. Matches Lucene's
 /// `ConcatenateGraphFilter.SEP_LABEL` (U+001E).
 const SEP: u8 = 0x1E;
@@ -386,10 +388,10 @@ fn step<'a>(
 // ─── Analyzer / tokenizer (folding-aware) ───────────────────────────────
 
 #[derive(Debug, Clone)]
-struct Token {
-    bytes: Vec<u8>,
-    start: usize,
-    end: usize,
+pub struct Token {
+    pub bytes: Vec<u8>,
+    pub start: usize,
+    pub end: usize,
 }
 
 /// One folded character with a back-pointer to the original char span.
@@ -465,7 +467,7 @@ fn fold_text(text: &str) -> Vec<Folded> {
     out
 }
 
-fn tokenize(text: &str) -> Vec<Token> {
+pub fn tokenize(text: &str) -> Vec<Token> {
     let folded = fold_text(text);
     let mut tokens = Vec::new();
     let mut cur: Option<Token> = None;

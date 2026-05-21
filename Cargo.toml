@@ -15,6 +15,10 @@ path = "src/bin/tag.rs"
 name = "tag-server"
 path = "src/bin/tag_server.rs"
 
+[[bin]]
+name = "search"
+path = "src/bin/search.rs"
+
 [profile.release]
 lto = true
 codegen-units = 1
