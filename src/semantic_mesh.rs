@@ -161,6 +161,7 @@ impl MarkovChain {
     pub fn generate(&self, seed_word: Option<&str>, max_tokens: usize) -> String {
         let mut rng = SimpleRng::new();
         let mut tokens = Vec::new();
+        let mut visited_trigrams = std::collections::HashSet::new();
 
         // 1. Choose starting pair
         let mut current_pair = None;
@@ -199,8 +200,37 @@ impl MarkovChain {
                 if next_words.is_empty() {
                     break;
                 }
-                let next_idx = rng.next_range(0, next_words.len());
-                let w3 = &next_words[next_idx];
+
+                // Deduplicate transitions to avoid infinite loops and repeating clauses
+                let mut candidates_w3 = Vec::new();
+                for w in next_words {
+                    let trigram = (w1.clone(), w2.clone(), w.clone());
+                    if !visited_trigrams.contains(&trigram) {
+                        candidates_w3.push(w.clone());
+                    }
+                }
+
+                let w3 = if !candidates_w3.is_empty() {
+                    let next_idx = rng.next_range(0, candidates_w3.len());
+                    candidates_w3[next_idx].clone()
+                } else {
+                    // If stuck in a loop where all choices would repeat a trigram,
+                    // jump to a new start pair to maintain natural diversity.
+                    if !self.start_words.is_empty() {
+                        let idx = rng.next_range(0, self.start_words.len());
+                        let (start_w1, start_w2) = self.start_words[idx].clone();
+                        w1 = start_w1;
+                        w2 = start_w2;
+                        tokens.push(w1.clone());
+                        tokens.push(w2.clone());
+                        token_count += 2;
+                        continue;
+                    } else {
+                        break;
+                    }
+                };
+
+                visited_trigrams.insert((w1.clone(), w2.clone(), w3.clone()));
                 tokens.push(w3.clone());
 
                 w1 = w2;
@@ -223,6 +253,9 @@ impl MarkovChain {
                     let idx = rng.next_range(0, candidates.len());
                     w1 = candidates[idx].0.clone();
                     w2 = candidates[idx].1.clone();
+                    // Push the new word since we are jumping and it hasn't been pushed!
+                    tokens.push(w2.clone());
+                    token_count += 1;
                 } else {
                     break;
                 }
