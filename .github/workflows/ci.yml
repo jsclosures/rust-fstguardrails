@@ -1,4 +1,4 @@
-name: Rust Continuous Integration
+name: Rust Continuous Integration & Build Artifacts
 
 on:
   push:
@@ -10,10 +10,9 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-    name: Build & Test
+  test:
+    name: Run Tests
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -39,3 +38,68 @@ jobs:
 
       - name: Run unit test suite
         run: cargo test --verbose
+
+  build:
+    name: Build Release Binary
+    needs: test
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: lume-linux-x86_64
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: lume-macos-x86_64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: lume-windows-x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Stable Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache Cargo Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ matrix.os }}-cargo-
+
+      - name: Build All Binaries in Release Mode
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Organize Artifacts (Linux / macOS)
+        if: matrix.os != 'windows-latest'
+        run: |
+          mkdir -p dist
+          cp target/${{ matrix.target }}/release/tag dist/
+          cp target/${{ matrix.target }}/release/tag-server dist/
+          cp target/${{ matrix.target }}/release/search dist/
+          cp target/${{ matrix.target }}/release/hatcher-boost dist/
+
+      - name: Organize Artifacts (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          mkdir dist
+          copy target\${{ matrix.target }}\release\tag.exe dist\
+          copy target\${{ matrix.target }}\release\tag-server.exe dist\
+          copy target\${{ matrix.target }}\release\search.exe dist\
+          copy target\${{ matrix.target }}\release\hatcher-boost.exe dist\
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/*
