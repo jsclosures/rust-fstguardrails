@@ -288,7 +288,7 @@ fn execute_graph(index: &Bm25Index, min_similarity: f64) {
     
     // Serialize to JSON and write to file
     let json_content = graph.to_json();
-    let file_path = "monte_cristo_graph.json";
+    let file_path = "examples/monte_cristo_graph.json";
     match fs::write(file_path, json_content) {
         Ok(_) => {
             println!(
