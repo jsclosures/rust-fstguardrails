@@ -57,27 +57,38 @@ DATA="examples/data" ALPHA=2.0 cargo run --release --bin hatcher-boost -- exampl
 
 ## 📖 The Backstory: How it All Connects
 
-Lume is the story of ideas moving from one person to another—a search meme carried through years of open-source heritage, industrial systems engineering, and modern AI capability.
+Lume is the story of ideas moving from one person to another—a search meme carried through years of crawling systems, open-source heritage, industrial search consulting, and modern AI capability.
 
-### The Search Heritage (Lucidworks)
-It began with the transfer of search engineering wisdom. At **Lucidworks**, key concepts in information retrieval were being explored by search veterans like **Trey Grainger** and **Erik Hatcher**, who had spent years mastering search systems. While consulting there, Kord met Steve Harris, who was likewise bringing search expertise to the industry through his consultancy.
+### 🐧 The Seed: It Began with Crawling (Grub)
+It all started with web crawling. Back in the early days of distributed search, [Kord Campbell](https://www.linkedin.com/in/kordless) created **Grub**—a massively distributed web crawler. After installing Lucene, Kord sent an email to Eric Schmidt (then-CEO of Google), saying: *"Hey, I've got this super fast distributed crawler."* Schmidt replied with a classic search insight: *"That's not the problem. We've got crawling figured out. Indexing is the challenge."*
 
+Decades later, that conversation has come full circle. In the age of AI, **crawling is everything again**. To feed frontier LLMs, you have to crawl to get the content, and you need a crawler that you can control. 
 
-Years later, this shared heritage led Steve to port his zero-dependency JavaScript finite-state tagger to Rust, releasing it as [fstguardrails](https://github.com/jsclosures/fstguardrails). Steve's Finite State Transducer (FST) compiled phrase dictionaries into compressed, deterministically navigable byte networks, performing longest-match phrase tagging, ASCII folding, and hyphen stripping with zero runtime dependencies.
+But once you crawl it, where do you put it? 
 
-### The Set Engine & The Deletion
-In parallel, another thread of the search meme emerged from the world of high-speed ad networks. These platforms needed to calculate massive document and user segment intersections in microseconds. To achieve this, they relied on **Roaring Bitmaps**—a highly compressed pack-integer representation that performs set mathematics at hardware speed (a primitive that Lucene itself eventually integrated into its indexing pipeline).
+### 🧠 The Memory Challenge
+You can't crawl the web fresh every single time you need an answer. Web pages are a type of document memory. Unlike bot or conversational memory (like an LLM remembering that a user's parrot is blue), document memory is about capturing the precise text you just saw. Some of these pages never update, while others update every minute with stock prices or weather data. You need a dedicated, extremely fast local document store to hold and index this memory.
 
-At some point in the last five years, Kord worked as the Chief AI Officer for a minor analytics company in Austin. During his tenure, the engineering team announced they had deleted 100,000 lines of code from their system in a single day. While he had no idea what those lines actually did, the sheer complexity of that stack seemed unnecessary. Having researched roaring bitmaps, Kord knew they weren't actually that difficult once understood, yet they were flabbergastingly fast. However, those ad systems were really just *set engines*, not true search engines. They did not fully understand the deep lexical and scoring wisdom of actual search.
+That's when the pieces fell into place. Kord was watching LinkedIn and saw [Steve Harris](https://www.linkedin.com/in/steveharris0) post about porting his zero-dependency JavaScript FST tagger to Rust (released as [fstguardrails](https://github.com/jsclosures/fstguardrails)). Steve had run [Portaltown](https://www.portaltown.com), a search consultancy, and had worked for **Lucidworks**. His background as a U.S. Marine Corps air traffic controller deeply influenced how he designed systems: a pure focus on safety, extreme precision, and bare-metal performance. 
 
-### The Memory Challenge & The 24-Hour AI Genesis
-The connection happened when trying to solve a hard problem in local AI memory. While it is simple enough for an LLM bot to remember a conversational detail—like a user mentioning their parrot is blue—it is a different challenge entirely to remember a full document. An AI needs to search documents quickly for relevant context, and a user needs to search and say, *"I remember reading a specific phrase in Monte Cristo; where was that? Read it to me, reenact it, or draw a picture of it."*
+Kord saw Steve's post and realized: *"That FST tagger is the first part of our document index."*
 
-To do this, a fast, lightweight document index was desperately needed. Watching LinkedIn, Kord saw Steve post his Rust port of `fstguardrails` and realized: *"That is the first part of a search engine."*
+### 💡 The "Aha" Moments (Erik Hatcher & Trey Grainger)
+To turn that FST tagger into a complete, lightweight search engine, Kord drew on years of shared search history. During his time consulting at **Lucidworks**, Kord had met OG search veterans [Trey Grainger](https://www.linkedin.com/in/treygrainger) and [Erik Hatcher](https://www.linkedin.com/in/erikhatcher). 
 
-The pieces of the search meme were all in place: the FST phrase tagger, semantic co-occurrence graphs, semantic boosting, and the bare-metal speed of Roaring Bitmaps. Because he had recently containerized **Antigravity** (his AI coding assistant) and loved writing Rust with it, Kord decided to see if the ideas could be fused.
+Trey's work on Solr's **Semantic Knowledge Graph (SKG)** had always stuck with Kord. The concept seemed complex, but Erik Hatcher had delivered the ultimate "aha" moment by putting it simply: 
+> *Facets are just counts of the occurrences of something in a document. The Knowledge Graph is simply looking at those counts across all documents to perform document intersections. It is just counting the counts of things.*
 
-Unleashing the AI in a continuous human-AI pair programming loop, Kord guided the high-level systems design while the AI fleshed out the primitives. In less than 24 hours of continuous iteration, Lume went from a raw FST port to a fully operational, high-performance search engine mesh.
+That was the magic of Erik Hatcher—he has always had the unique gift of taking complex technology and showing everyone how it actually works under the hood. (We throw affectionate shade at Trey for making it look complicated, and at Eric for making it look too simple!)
+
+Understanding that primitive meant realizing a high-speed search engine didn't need millions of lines of code. It just needed to do simple things incredibly fast: FSTs for words, roaring bitmaps for set intersections, spell correction for misspellings, and additive hybrid boosting for vector context. We wanted a system built with **only one external library** (`tantivy-fst`), and the rest made of pure, clean, understandable ideas.
+
+### 🚀 The 24-Hour AI Genesis
+A few months ago, Kord fired up Claude and said, *"Build me a simple BM25 index for these words."* It did, and looking at the clean code made the mathematical simplicity of BM25 click. 
+
+When Steve's Rust FST was released, Kord fired up **Antigravity**—a frontier-level AI coding assistant that Google just dropped days ago. Since Google is the undisputed king of web search, it is beautifully poetic that their own state-of-the-art AI pair-programmer helped write this search engine.
+
+Working in a continuous human-AI feedback loop with Kord's prattling systems-brain guiding the high-level design, Antigravity rapidly wrote and assembled the primitives. In a single 24-hour sprint, Lume went from an FST tagger to a complete, powerful, ultra-small search engine mesh. Kord called Steve, and they decided to put it out there for the world.
 
 ---
 
@@ -122,9 +133,13 @@ To support lightning-fast document isolation, we represent the posting lists of 
 We use number theory to completely bypass expensive scoring loops for irrelevant documents.
 *   **What it does**:
     1.  **Gödel Modulo Pruning**: If a query has FST tags, Lume skips candidate documents in $O(1)$ time by verifying if the document's perfect Gödel tag signature is divisible by the query's prime signature:
-        $$\text{tagSignature} \pmod{\text{queryTagPrime}} == 0$$
+        ```text
+        tagSignature % queryTagPrime == 0
+        ```
     2.  **PrimeFilter Skips**: Before scoring a document, Lume checks a bitset-like signature bucket. If the division has a remainder, the document is guaranteed not to contain the term, and we skip standard HashMap lookups entirely:
-        $$\text{signatures}[\text{bucket}] \pmod{\text{termPrime}} == 0$$
+        ```text
+        signatures[bucket] % termPrime == 0
+        ```
 
 ### [Primitive 4] Field-Aware BM25 Scoring
 The lexical scoring core implements BM25 ranking, allowing fields (like document titles vs. document bodies) to carry different weights.
@@ -148,7 +163,9 @@ A dedicated spelling corrector built directly into the indexing phase.
 ### [Primitive 6] Semantic Entity Co-occurrence Graph (Option A)
 A mathematical graphing layer crossing FST dictionary tags with document roaring bitmaps, inspired by **Trey Grainger's** Semantic Knowledge Graph (SKG) design.
 *   **What it does**: Computes the exact co-occurrence frequency and Jaccard similarity between all registered entities based on their document overlap:
-    $$\text{Jaccard}(A, B) = \frac{|A \cap B|}{|A \cup B|}$$
+    ```text
+    Jaccard(A, B) = |A ∩ B| / |A ∪ B|
+    ```
     Drawing from Trey's original work on Solr's **Semantic Knowledge Graph (SKG)** at **Lucidworks**, this demonstrates how search indices can calculate semantic relationships dynamically. Lume serializes this network into a clean `monte_cristo_graph.json` mesh file in less than **1 millisecond** using a custom zero-dependency JSON writer, displaying a beautiful box-aligned relationship grid in the console:
     ```text
     ┌──────────────────────────────┬──────────────────────────────┬────────┬───────┐
@@ -181,7 +198,9 @@ Our flagship hybrid integration, implementing the two-stage **Semantic Boosting*
     1.  **Stage 1 (ONNX Semantic Retrieval)**: Establishes a connection to an ephemeral, time-seeded session on `https://shivvr.nuts.services/` to retrieve top conceptual candidates and their cosine similarity scores.
     2.  **Stage 2 (Local Lexical Scoring)**: Calculates standard BM25 rankings for candidates.
     3.  **Blending Math**: Blends both scores using Hatcher's formulation, allowing the semantic vector similarity to boost the lexical relevance score:
-        $$\text{Score}_{\text{hybrid}} = \text{Score}_{\text{BM25}} + (\alpha \times \text{Similarity}_{\text{semantic}})$$
+        ```text
+        Score_hybrid = Score_BM25 + (alpha * Similarity_semantic)
+        ```
 *   **OG Code Reference**:
     ```rust
     // Core hybrid blend in src/bin/hatcher_boost.rs
