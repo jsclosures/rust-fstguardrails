@@ -3,3 +3,4 @@ pub mod tag_server;
 pub mod search;
 pub mod hatcher_boost;
 pub mod mcp;
+pub mod crawl;

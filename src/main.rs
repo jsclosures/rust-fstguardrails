@@ -27,6 +27,9 @@ fn main() {
         "mcp" => {
             lume::cli::mcp::run(sub_args);
         }
+        "crawl" => {
+            lume::cli::crawl::run(sub_args);
+        }
         "-h" | "--help" | "help" => {
             print_help();
         }
@@ -59,6 +62,7 @@ fn print_help() {
     println!("  \x1B[1;32mhatcher-boost\x1B[0m Hatcher two-stage semantic-lexical boosting engine");
     println!("                \x1B[38;5;244m(Aliases: hatcher, boost)\x1B[0m");
     println!("  \x1B[1;32mmcp\x1B[0m           Run high-performance Model Context Protocol (MCP) server");
+    println!("  \x1B[1;32mcrawl\x1B[0m         Crawl a webpage to markdown via grub.nuts.services");
     println!();
     println!("\x1B[1;33mEXAMPLES:\x1B[0m");
     println!("  \x1B[38;5;244m# Start an interactive hybrid search REPL on Monte Cristo:\x1B[0m");
@@ -75,6 +79,9 @@ fn print_help() {
     println!();
     println!("  \x1B[38;5;244m# Start the high-performance local Model Context Protocol (MCP) server:\x1B[0m");
     println!("  DATA=\"examples/data\" lume mcp");
+    println!();
+    println!("  \x1B[38;5;244m# Crawl a webpage to your personal search engine collection:\x1B[0m");
+    println!("  lume crawl https://news.ycombinator.com");
     println!("────────────────────────────────────────────────────────────────────────");
     println!();
 }

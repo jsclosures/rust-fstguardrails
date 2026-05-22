@@ -264,7 +264,27 @@ DATA="examples/data" ALPHA=3.0 ./target/release/lume hatcher-boost examples/mont
 DATA="examples/data" ALPHA=2.0 ./target/release/lume hatcher-boost examples/monte_cristo.md
 ```
 
+### On-Demand Website Crawling
+
+Lume integrates seamlessly with `grub.nuts.services` to crawl online resources, convert them to high-fidelity markdown format on-the-fly, and automatically save them to your personal search engine document collection (`examples/crawled/`) for immediate BM25 hybrid querying.
+
+> [!NOTE]
+> **Authentication Token**: A valid `nuts.services` token is required. The audience can acquire their own crawler keys directly at [nuts.services](https://nuts.services).
+> Set your token in your local `.env` file (which is automatically ignored from git by `.gitignore`):
+> ```env
+> NUTS_SERVICES_TOKEN=your_token_here
+> ```
+
+```bash
+# Crawl any webpage directly into your personal document library
+./target/release/lume crawl https://news.ycombinator.com
+
+# Instantly query the crawled collection with BM25 hybrid search
+DATA="examples/data" ./target/release/lume search examples/crawled "show hn"
+```
+
 ---
+
 
 ## 🔌 Model Context Protocol (MCP) Server
 
