@@ -67,7 +67,14 @@ This background in deterministic paths and rendering pipelines led to his zero-d
 
 Having worked with search stacks like Lucene, Solr, and Splunk, Kord's engineering approach is quiet and intuitive: *"I don't see it, I feel it. I understand the primitive and pull from those that I see are 'right' for the job. That is just good pattern matching."* Rather than building heavy, complex software layers, he focuses on aligning basic mathematical and systems primitives.
 
-This approach led to the integration of **Roaring Bitmaps** into Lume. In search advertising and SEO, systems calculate intersections of large document and user segment lists to find matching sets. Roaring bitmaps represent integer arrays efficiently, allowing fast bitwise operations. By combining **Steve's FST phrase matching** with **Kord's set intersections** and standard **BM25 lexical ranking**, Lume was built by layering simple, focused primitives directly on top of the FST word tree.
+This approach led to the integration of **Roaring Bitmaps** into Lume. In search advertising and SEO, systems calculate intersections of large document and user segment lists to find matching sets. Roaring bitmaps represent integer arrays efficiently, allowing fast bitwise operations.
+
+### The 24-Hour AI Genesis (The Real Story)
+The real story of how Lume came together is a human-AI collaboration sparked by a LinkedIn post. Kord was watching [Steve Harris](https://github.com/jsclosures) post about porting his zero-dependency finite-state tagger to Rust. Kord, who is working on local memory systems, was in desperate need of a high-performance document index. Seeing Steve's post, Kord realized: *"That is the first part of a search engine."*
+
+Having watched insights from search specialists on LinkedIn—including Steve, Erik Hatcher, Doug Turnbull (a-software), and others—Kord realized they had all the necessary components. Kord had recently developed a deep appreciation for Rust, particularly because he was using AI, specifically **Antigravity**, to write the code. 
+
+Kord fired up Antigravity, which he had just containerized, and unleashed it with his foundational systems design guiding the direction. Collaborating continuously with the AI in a tight feedback loop, they brought the parts together. In less than 24 hours, they went from Steve's raw FST port to a fully operational, high-performance search engine mesh combining FST phrase matching, roaring bitmaps, field-aware BM25 ranking, and semantic boosting.
 
 ---
 
