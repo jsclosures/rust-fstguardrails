@@ -59,8 +59,9 @@ DATA="examples/data" ALPHA=2.0 cargo run --release --bin hatcher-boost -- exampl
 
 Lume is the story of ideas moving from one person to another—a search meme carried through years of open-source heritage, industrial systems engineering, and modern AI capability.
 
-### The Search Heritage (Lucidworks & AOL)
-It began with the transfer of search engineering wisdom. At **Lucidworks**, key concepts in information retrieval were being explored by search veterans like **Trey Grainger** and **Erik Hatcher**, who had spent years mastering search engines and natural language systems. While consulting there, Kord met Steve Harris, who brought deep search experience from serving as a **U.S. Marine Corps Air Traffic Controller** (Sgt MATCS-38 Det C), studying graphics at **Washington State University**, interning at **Apple**, and working as a Lucene developer at AOL.
+### The Search Heritage (Lucidworks)
+It began with the transfer of search engineering wisdom. At **Lucidworks**, key concepts in information retrieval were being explored by search veterans like **Trey Grainger** and **Erik Hatcher**, who had spent years mastering search systems. While consulting there, Kord met Steve Harris, who was likewise bringing search expertise to the industry through his consultancy.
+
 
 Years later, this shared heritage led Steve to port his zero-dependency JavaScript finite-state tagger to Rust, releasing it as [fstguardrails](https://github.com/jsclosures/fstguardrails). Steve's Finite State Transducer (FST) compiled phrase dictionaries into compressed, deterministically navigable byte networks, performing longest-match phrase tagging, ASCII folding, and hyphen stripping with zero runtime dependencies.
 
