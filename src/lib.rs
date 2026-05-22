@@ -26,6 +26,7 @@ pub mod fast_retrieval;
 pub mod semantic_mesh;
 pub mod regex;
 pub mod spelling;
+pub mod cli;
 
 /// Token separator used inside FST keys. Matches Lucene's
 /// `ConcatenateGraphFilter.SEP_LABEL` (U+001E).

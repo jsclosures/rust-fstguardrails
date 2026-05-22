@@ -229,44 +229,111 @@ Our flagship hybrid integration, implementing the two-stage **Semantic Boosting*
 
 ## 🛠️ CLI Operations Manual
 
-### Compile and Standard Search
+Lume is compiled as a **unified unibinary** (`lume`). The individual commands (`tag`, `tag-server`, `search`, `hatcher-boost`) are also generated as thin, backwards-compatible wrappers delegating to the unified library entrypoints.
+
+### Unified Command Routing
 ```bash
 # Clean build and compile fully optimized binaries
 cargo build --release
 
 # Single-file search targeting a markdown document
-DATA="examples/data" cargo run --release --bin search -- examples/monte_cristo.md "mercedes dantes"
+DATA="examples/data" ./target/release/lume search examples/monte_cristo.md "mercedes dantes"
 
 # On-demand recursive directory crawling and indexing
-DATA="examples/data" cargo run --release --bin search -- examples "monte cristo"
+DATA="examples/data" ./target/release/lume search examples "monte cristo"
 ```
 
 ### Entity Network Generation (Option A)
 ```bash
 # Construct entity relationship mesh (computes Jaccard > 0.02)
-DATA="examples/data" cargo run --release --bin search -- examples/monte_cristo.md graph 0.02
+DATA="examples/data" ./target/release/lume search examples/monte_cristo.md graph 0.02
 ```
 
 ### Markov Prose Generation (Option C)
 ```bash
 # Seed paragraph writer in Dumas' style
-DATA="examples/data" cargo run --release --bin search -- examples/monte_cristo.md generate Dantès
+DATA="examples/data" ./target/release/lume search examples/monte_cristo.md generate Dantès
 ```
 
 ### Erik Hatcher's Semantic Boosting
 ```bash
 # One-shot semantic-boosting with custom alpha weight
-DATA="examples/data" ALPHA=3.0 cargo run --release --bin hatcher-boost -- examples/monte_cristo.md "mercedes dantes"
+DATA="examples/data" ALPHA=3.0 ./target/release/lume hatcher-boost examples/monte_cristo.md "mercedes dantes"
 
 # Launch the interactive semantic-boost REPL console
-DATA="examples/data" ALPHA=2.0 cargo run --release --bin hatcher-boost -- examples/monte_cristo.md
+DATA="examples/data" ALPHA=2.0 ./target/release/lume hatcher-boost examples/monte_cristo.md
 ```
+
+---
+
+## 🔌 Model Context Protocol (MCP) Server
+
+Lume integrates a high-performance **Model Context Protocol (MCP)** server natively over `stdio`. It exposes search, entity extraction, and text generation primitives directly to AI agents and IDEs (like Cursor or Claude Desktop) offline.
+
+### Launching the MCP Server
+```bash
+DATA="examples/data" ./target/release/lume mcp
+```
+
+### Exposed MCP Tools
+1. **`lume_tag`**: Extracts FST-dictionary entities from a text block, returning structured offsets, kinds, unique IDs, and outputs as JSON.
+2. **`lume_search`**: Performs field-aware BM25 hybrid search over a file or directory on-the-fly, returning results in Markdown format with inline entity highlights.
+3. **`lume_generate`**: Builds a trigram Markov model over a document on-the-fly and generates guided text with live stochastic attention traces.
+
+> [!TIP]
+> **Dynamic Index Caching**: The MCP server automatically caches parsed BM25 index states in a thread-safe global static. By tracking the modification time (`mtime`) of target paths, Lume skips re-indexing when documents haven't changed, reducing subsequent query response times to **under 1ms**.
+
+---
+
+## 🐳 Docker Deployment
+
+Lume is packaged into a secure, multi-stage production container. The runner stage features a **non-privileged user (`lume:lume`)** and has **`ca-certificates`** installed to support HTTPS connections (e.g., semantic boosting requests via `ureq`).
+
+### 1. Build the Docker Image (using BuildKit Caching)
+```bash
+DOCKER_BUILDKIT=1 docker build -t lume:latest .
+```
+
+### 2. Deploy as an HTTP Tagger Server
+By default, the container boots the HTTP REST API server on port `8080`:
+```bash
+docker run -d \
+  -p 8080:8080 \
+  --name lume-server \
+  lume:latest
+```
+
+### 3. Deploy as a local stdio MCP Server
+Mount your document directory and run Lume as an interactive MCP server inside your IDE:
+```bash
+docker run -i --rm \
+  -v /path/to/local/data:/app/data \
+  lume:latest mcp
+```
+
+---
+
+## ⚙️ Continuous Integration & Versioning
+
+### How is Lume Versioned?
+Lume follows the strict **Semantic Versioning 2.0.0** (SemVer) specification. 
+* Versioning is declared in the root [Cargo.toml](Cargo.toml) (currently `0.1.0`).
+* Releases are marked with Git tags (e.g., `v0.1.0`), which trigger the publishing process of the unified binary (`lume`) and standard wrappers.
+
+### Is the Build Going Off?
+**Yes!** Every push and pull request targeting the `main` or `bm25-search-mesh` branches triggers our automated [GitHub Action CI Pipeline](.github/workflows/ci.yml):
+1. **Verification**: Compiles the source using `cargo check` and runs the full test suite (`cargo test`).
+2. **Multi-Platform Compilation**: Compiles fully optimized release binaries across:
+   * **Linux** (`x86_64-unknown-linux-gnu`)
+   * **macOS** (`x86_64-apple-darwin`)
+   * **Windows** (`x86_64-pc-windows-msvc`)
+3. **Artifact Bundling**: Packs the unified `lume` unibinary alongside backward-compatible wrappers (`tag`, `tag-server`, `search`, `hatcher-boost`) into a single release package uploaded straight to the GitHub run interface.
 
 ---
 
 ## 💬 Interactive REPL Interface
 
-Both the `search` and `hatcher-boost` binaries boot into an interactive shell when run without a query argument.
+Both the `search` and `hatcher-boost` subcommands boot into an interactive shell when run without a query argument.
 
 *   **Standard REPL (`search >`)**:
     *   Type any search terms (e.g. `faria dungeon`) to print ranked and highlighted snippets.

@@ -84,6 +84,7 @@ jobs:
         if: matrix.os != 'windows-latest'
         run: |
           mkdir -p dist
+          cp target/${{ matrix.target }}/release/lume dist/
           cp target/${{ matrix.target }}/release/tag dist/
           cp target/${{ matrix.target }}/release/tag-server dist/
           cp target/${{ matrix.target }}/release/search dist/
@@ -93,6 +94,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           mkdir dist
+          copy target\${{ matrix.target }}\release\lume.exe dist\
           copy target\${{ matrix.target }}\release\tag.exe dist\
           copy target\${{ matrix.target }}\release\tag-server.exe dist\
           copy target\${{ matrix.target }}\release\search.exe dist\
