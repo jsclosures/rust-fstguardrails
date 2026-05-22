@@ -2,6 +2,14 @@
 
 A high-performance Rust library and CLI suite featuring an FST-backed phrase matcher, on-demand document indexer, and field-aware BM25 hybrid search engine.
 
+<div align="center">
+
+[![Rust Setup](https://img.shields.io/badge/Rust-Setup%20Guide-FF4400?style=for-the-badge&logo=rust)](rust_setup.md)
+[![Steve Harris](https://img.shields.io/badge/Steve%20Harris-jsclosures-00D2FF?style=for-the-badge&logo=github)](https://github.com/jsclosures)
+[![Kord Campbell](https://img.shields.io/badge/Kord%20Campbell-kordless-9F44FF?style=for-the-badge&logo=github)](https://github.com/kordless)
+
+</div>
+
 ---
 
 ## ⚡ Quick Start Guide
@@ -9,7 +17,7 @@ A high-performance Rust library and CLI suite featuring an FST-backed phrase mat
 Get Lume up and running in under two minutes.
 
 ### 1. Build and Test the System
-Ensure you have the Rust toolchain installed, then clone and compile:
+Ensure you have the Rust toolchain installed (see the comprehensive [rust_setup.md](rust_setup.md) for local environment configuration), then clone and compile:
 ```bash
 # Clone the repository
 git clone https://github.com/kordless/lume.git
@@ -50,12 +58,12 @@ DATA="examples/data" ALPHA=2.0 cargo run --release --bin hatcher-boost -- exampl
 ## 📖 The Backstory: From FST Tagger to Search Engine Mesh
 
 ### The FST Genesis (Steve's Primitive)
-Lume started as a fork of `fstguardrails` by Steve Harris (`jsclosures`), an OG search expert. Steve's original contribution was a highly specialized, zero-dependency JavaScript finite-state tagger (`lib.js`). In search engineering, the **Finite State Transducer (FST)** is a legendary primitive—it compiles massive dictionaries of phrases into highly compressed, deterministically navigable byte paths. 
+Lume started as a fork of `fstguardrails` by [Steve Harris](https://github.com/jsclosures) (`jsclosures`), an OG search expert. Steve's original contribution was a highly specialized, zero-dependency JavaScript finite-state tagger (`lib.js`). In search engineering, the **Finite State Transducer (FST)** is a legendary primitive—it compiles massive dictionaries of phrases into highly compressed, deterministically navigable byte paths. 
 
 Steve's tagger demonstrated how to perform longest-match phrase tagging, ASCII diacritic folding, and hyphen stripping with unmatched memory efficiency. This tagger was ideal for enforcing guardrails (like identifying and isolating offensive terminology), but FST phrase matching alone only tells you *what* terms are in your documents, not *how* relevant the documents are to a broader query.
 
 ### Systems and Advertising Scale (Kord's Backstory)
-Kord Campbell (`kordless`) came to search from a systems and web-crawling background. Having set up and deployed Apache Lucene years ago, he wanted to break open the black box to understand how its search mechanics operated under the hood at scale.
+[Kord Campbell](https://github.com/kordless) (`kordless`) came to search from a systems and web-crawling background. Having set up and deployed Apache Lucene years ago, he wanted to break open the black box to understand how its search mechanics operated under the hood at scale.
 
 In search advertising (SEO and ad networks), systems must calculate intersections of massive document and user segment lists in microseconds to serve the right ads. This extreme environment gave birth to **Roaring Bitmaps**—a highly compressed representation of integer arrays that performs bitwise set math at hardware speed. While Lucene eventually integrated similar bitset models into its indexing pipeline, roaring bitmaps remain one of the most powerful primitives in information retrieval.
 
