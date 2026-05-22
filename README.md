@@ -136,10 +136,10 @@ A dedicated spelling corrector built directly into the indexing phase.
     ```
 
 ### [Primitive 6] Semantic Entity Co-occurrence Graph (Option A)
-A mathematical graphing layer that crosses FST dictionary tags with document-level roaring bitmaps.
+A mathematical graphing layer crossing FST dictionary tags with document roaring bitmaps, inspired by **Trey Grainger's** Semantic Knowledge Graph (SKG) design.
 *   **What it does**: Computes the exact co-occurrence frequency and Jaccard similarity between all registered entities based on their document overlap:
     $$\text{Jaccard}(A, B) = \frac{|A \cap B|}{|A \cup B|}$$
-    It serializes this network into a clean `monte_cristo_graph.json` mesh file in less than **1 millisecond** using a custom zero-dependency JSON writer, displaying a beautiful box-aligned relationship grid in the console:
+    Drawing from Trey's original work on Solr's **Semantic Knowledge Graph (SKG)** at **Lucidworks**, this demonstrates how search indices can calculate semantic relationships dynamically. Lume serializes this network into a clean `monte_cristo_graph.json` mesh file in less than **1 millisecond** using a custom zero-dependency JSON writer, displaying a beautiful box-aligned relationship grid in the console:
     ```text
     ┌──────────────────────────────┬──────────────────────────────┬────────┬───────┐
     │ ENTITY A                     │ ENTITY B                     │JACCARD │CO-OCC │
@@ -166,7 +166,7 @@ A mathematical graphing layer that crosses FST dictionary tags with document-lev
     ```
 
 ### [Primitive 7] Erik Hatcher's Semantic Boosting & Vector Integration (`hatcher-boost`)
-Our flagship hybrid integration, implementing Erik Hatcher's two-stage **Semantic Boosting** pattern.
+Our flagship hybrid integration, implementing the two-stage **Semantic Boosting** pattern pioneered by **Erik Hatcher** (co-founder of **Lucidworks**).
 *   **What it does**: Combines the precision and safety of local lexical search with the conceptual awareness of deep-neural ONNX embeddings:
     1.  **Stage 1 (ONNX Semantic Retrieval)**: Establishes a connection to an ephemeral, time-seeded session on `https://shivvr.nuts.services/` to retrieve top conceptual candidates and their cosine similarity scores.
     2.  **Stage 2 (Local Lexical Scoring)**: Calculates standard BM25 rankings for candidates.
