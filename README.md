@@ -131,7 +131,31 @@ A dedicated spelling corrector built directly into the indexing phase.
 A mathematical graphing layer that crosses FST dictionary tags with document-level roaring bitmaps.
 *   **What it does**: Computes the exact co-occurrence frequency and Jaccard similarity between all registered entities based on their document overlap:
     $$\text{Jaccard}(A, B) = \frac{|A \cap B|}{|A \cup B|}$$
-    It serializes this network into a clean `monte_cristo_graph.json` mesh file in less than **1 millisecond** using a custom zero-dependency JSON writer, displaying a beautiful box-aligned relationship grid in the console.
+    It serializes this network into a clean `monte_cristo_graph.json` mesh file in less than **1 millisecond** using a custom zero-dependency JSON writer, displaying a beautiful box-aligned relationship grid in the console:
+    ```text
+    ┌──────────────────────────────┬──────────────────────────────┬────────┬───────┐
+    │ ENTITY A                     │ ENTITY B                     │JACCARD │CO-OCC │
+    ├──────────────────────────────┼──────────────────────────────┼────────┼───────┤
+    │ VALENTINE                    │ VILLEFORT                    │ 0.4400 │  33/75  │
+    │ DANTES                       │ MARSEILLES                   │ 0.4386 │  25/57  │
+    │ ALBERT                       │ MONTECRISTO                  │ 0.4368 │  38/87  │
+    │ DANTES                       │ MERCEDES                     │ 0.4348 │  20/46  │
+    │ DANGLARS                     │ MONTECRISTO                  │ 0.4272 │  44/103 │
+    │ ALBERT                       │ PARIS                        │ 0.4186 │  36/86  │
+    │ MONTECRISTO                  │ VILLEFORT                    │ 0.4144 │  46/111 │
+    │ MAXIMILIAN                   │ VALENTINE                    │ 0.4043 │  19/47  │
+    │ DANGLARS                     │ VILLEFORT                    │ 0.4021 │  39/97  │
+    │ MARSEILLES                   │ PARIS                        │ 0.4000 │  36/90  │
+    │ DANTES                       │ PHARAON                      │ 0.3750 │  15/40  │
+    │ MARSEILLES                   │ VILLEFORT                    │ 0.3721 │  32/86  │
+    │ FERNAND                      │ MERCEDES                     │ 0.3714 │  13/35  │
+    │ DANTES                       │ FARIA                        │ 0.3684 │  14/38  │
+    │ CHATEAUDIF                   │ DANTES                       │ 0.3500 │  14/40  │
+    │ MARSEILLES                   │ MERCEDES                     │ 0.3455 │  19/55  │
+    │ MERCEDES                     │ PHARAON                      │ 0.3429 │  12/35  │
+    │ MAXIMILIAN                   │ NOIRTIER                     │ 0.3400 │  17/50  │
+    └──────────────────────────────┴──────────────────────────────┴────────┴───────┘
+    ```
 
 ### [Primitive 7] Erik Hatcher's Semantic Boosting & Vector Integration (`hatcher-boost`)
 Our flagship hybrid integration, implementing Erik Hatcher's two-stage **Semantic Boosting** pattern.
