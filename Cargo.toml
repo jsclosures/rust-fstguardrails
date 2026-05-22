@@ -1,11 +1,14 @@
 [package]
-name = "text-tagger"
+name = "lume"
 version = "0.1.0"
 edition = "2021"
-description = "A simple FST-based text tagger in Rust, inspired by Lucene's SolrTextTagger."
+description = "Lume: A high-performance, zero-dependency, FST-backed tagger and on-demand BM25 hybrid search engine."
 
 [dependencies]
 tantivy-fst = "0.5"
+ureq = { version = "2.9", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
 [[bin]]
 name = "tag"
@@ -14,6 +17,14 @@ path = "src/bin/tag.rs"
 [[bin]]
 name = "tag-server"
 path = "src/bin/tag_server.rs"
+
+[[bin]]
+name = "search"
+path = "src/bin/search.rs"
+
+[[bin]]
+name = "hatcher-boost"
+path = "src/bin/hatcher_boost.rs"
 
 [profile.release]
 lto = true

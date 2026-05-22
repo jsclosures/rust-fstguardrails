@@ -1,0 +1,140 @@
+{
+  "entities": [
+    {
+      "id": "AGENT",
+      "label": "Vesper-Echo",
+      "kind": "agents",
+      "frequency": 5
+    },
+    {
+      "id": "CORP",
+      "label": "Aegis-Systems",
+      "kind": "agents",
+      "frequency": 5
+    },
+    {
+      "id": "NET_ROUTE",
+      "label": "IP-192.168",
+      "kind": "hashes",
+      "frequency": 2
+    },
+    {
+      "id": "SECTOR",
+      "label": "Neon District",
+      "kind": "sectors",
+      "frequency": 5
+    },
+    {
+      "id": "SERIAL",
+      "label": "SN-4521-X",
+      "kind": "hashes",
+      "frequency": 2
+    },
+    {
+      "id": "TRANSACTION",
+      "label": "TX-89AB12",
+      "kind": "hashes",
+      "frequency": 3
+    }
+  ],
+  "links": [
+    {
+      "source": "AGENT",
+      "target": "CORP",
+      "similarity": 1.0000,
+      "intersection": 5,
+      "union": 5
+    },
+    {
+      "source": "AGENT",
+      "target": "SECTOR",
+      "similarity": 1.0000,
+      "intersection": 5,
+      "union": 5
+    },
+    {
+      "source": "CORP",
+      "target": "SECTOR",
+      "similarity": 1.0000,
+      "intersection": 5,
+      "union": 5
+    },
+    {
+      "source": "AGENT",
+      "target": "TRANSACTION",
+      "similarity": 0.6000,
+      "intersection": 3,
+      "union": 5
+    },
+    {
+      "source": "CORP",
+      "target": "TRANSACTION",
+      "similarity": 0.6000,
+      "intersection": 3,
+      "union": 5
+    },
+    {
+      "source": "SECTOR",
+      "target": "TRANSACTION",
+      "similarity": 0.6000,
+      "intersection": 3,
+      "union": 5
+    },
+    {
+      "source": "AGENT",
+      "target": "NET_ROUTE",
+      "similarity": 0.4000,
+      "intersection": 2,
+      "union": 5
+    },
+    {
+      "source": "AGENT",
+      "target": "SERIAL",
+      "similarity": 0.4000,
+      "intersection": 2,
+      "union": 5
+    },
+    {
+      "source": "CORP",
+      "target": "NET_ROUTE",
+      "similarity": 0.4000,
+      "intersection": 2,
+      "union": 5
+    },
+    {
+      "source": "CORP",
+      "target": "SERIAL",
+      "similarity": 0.4000,
+      "intersection": 2,
+      "union": 5
+    },
+    {
+      "source": "NET_ROUTE",
+      "target": "SECTOR",
+      "similarity": 0.4000,
+      "intersection": 2,
+      "union": 5
+    },
+    {
+      "source": "SECTOR",
+      "target": "SERIAL",
+      "similarity": 0.4000,
+      "intersection": 2,
+      "union": 5
+    },
+    {
+      "source": "NET_ROUTE",
+      "target": "SERIAL",
+      "similarity": 0.3333,
+      "intersection": 1,
+      "union": 3
+    },
+    {
+      "source": "NET_ROUTE",
+      "target": "TRANSACTION",
+      "similarity": 0.2500,
+      "intersection": 1,
+      "union": 4
+    }
+  ]
+}
