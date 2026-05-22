@@ -22,6 +22,7 @@ A high-performance Rust library and CLI suite featuring an FST-backed entity tag
 | **Two-Stage Candidate Pruning Pipeline (`MiniRoaring` & `PrimeFilter`)** | ❌ | ✅ (Engine Mesh Addition) |
 | **Pairwise Posting List Jaccard Similarity** | ❌ | ✅ (Engine Mesh Addition) |
 | **Panic-Safe Shell Piping & Unicode-Aligned Highlighting** | ❌ | ✅ (Engine Mesh Addition) |
+| **Erik Hatcher's Semantic Boosting & Vector Integration** | ❌ | ✅ (Engine Mesh Addition via `hatcher-boost` CLI) |
 | MCP server, REPL, full demo walkthrough | ✅ | ❌ (deliberately out of scope) |
 
 ### Known limitation: ASCII folding table
@@ -217,6 +218,45 @@ To produce contextually coherent paragraphs in the exact prose style of Alexandr
 
 ---
 
+## 6. Erik Hatcher's Semantic Boosting & Vector Integration (`hatcher-boost`)
+
+Lume implements Erik Hatcher's famous two-shot **Semantic Boosting** architecture. This pattern blends the structural guarantees and precision of high-performance lexical indices (BM25) with the conceptual context of dense semantic embeddings (ONNX).
+
+```mermaid
+flowchart TD
+    subgraph Local Lexical Pipeline
+        Q[Input Query] --> BM25[BM25 Index Score]
+    end
+
+    subgraph Remote Semantic Pipeline
+        Q --> Shivvr[shivvr.nuts.services Vector Ingestion / Search]
+        Shivvr --> Sim[Cosine Similarity Score]
+    end
+
+    BM25 --> Blend[Hatcher Boosting Blending Formula]
+    Sim --> Blend
+    Blend --> Output[Aesthetic Side-by-Side Comparison Grid]
+```
+
+### Blending Score Formulation
+
+For every document candidate retrieved by local lexical search, its final rank is boosted by its semantic vector similarity:
+
+$$\text{Score}_{\text{hybrid}} = \text{Score}_{\text{BM25}} \times (1.0 + \alpha \times \text{Similarity}_{\text{semantic}})$$
+
+*   **$\alpha$ (Boost Weight)**: Dynamically scales the influence of semantic similarities. When $\alpha = 0.0$, the engine falls back to pure BM25.
+*   **Lexical-First Precision**: BM25 serves as the core filter, preserving exact matches and query constraints, while vector similarity dynamically boosts concepts that match the query's semantic intent.
+
+### Ephemeral Remote Vector Store Lifecycle
+
+To avoid local vector database dependencies, high-dimensional embedders, and heavy ONNX runtimes in Rust, the `hatcher-boost` engine interfaces with `https://shivvr.nuts.services/` via dynamic ephemeral sessions:
+1.  **Unique Session Provisioning**: On boot, a unique time-seeded temporary namespace (`lume-hatcher-<timestamp>`) is generated.
+2.  **Ephesian Bulk Ingestion**: The engine crawls and indexes target Markdown documents, submitting them chunk-by-chunk to `/temp/:name/ingest`.
+3.  **ONNX Search**: For each search query, semantic candidates are resolved remotely via `/temp/:name/search?q=<query>&n=15`.
+4.  **Graceful Session Termination**: On REPL exit or single-query completion, a REST `DELETE` request is transmitted to cleanly tear down the temporary session. If interrupted abruptly, the session automatically garbage-collects and expires within 2 hours.
+
+---
+
 ## Setup & Quick Start Guide
 
 Follow these steps to set up the repository, prepare the Gutenberg corpus, load custom FST tag categories, and run the search mesh at full power.
@@ -311,6 +351,19 @@ Build the trigram transition matrix and generate paragraphs seeded with a starti
 ```bash
 DATA="examples/data" cargo run --release --bin search -- examples/monte_cristo.md generate Dantès
 ```
+
+#### Erik Hatcher's Semantic Boosting (Two-Shot Vector Search)
+Execute a hybrid semantic-boosting search query blending remote dense ONNX embeddings and local lexical BM25 scores:
+```bash
+# Run one-shot search with high boost factor (ALPHA)
+DATA="examples/data" ALPHA=3.0 cargo run --release --bin hatcher-boost -- examples/monte_cristo.md "mercedes dantes"
+```
+
+Or run the interactive hybrid REPL:
+```bash
+DATA="examples/data" ALPHA=2.0 cargo run --release --bin hatcher-boost -- examples/monte_cristo.md
+```
+Once inside the REPL (`hybrid-search >`), search queries will present a detailed comparative grid showcasing **Pure Lexical BM25**, **Pure Semantic (ONNX)**, and **Semantic Boosted Hybrid** rankings side-by-side!
 
 #### Run the Interactive REPL
 To start the interactive command center, simply run the search binary without query arguments:
