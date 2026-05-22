@@ -259,7 +259,7 @@ fn main() {
             execute_graph(&index, min_similarity);
         } else if cmd == "generate" {
             let seed = args.get(1).map(|s| s.as_str());
-            execute_generate(&index, seed, doc_name, is_csv);
+            execute_generate(&index, tagger.as_ref(), seed, doc_name, is_csv);
         } else {
             let query = args.join(" ");
             execute_search(&index, tagger.as_ref(), &spell_index, &query, variant, &params);
@@ -305,7 +305,13 @@ fn execute_graph(index: &Bm25Index, min_similarity: f64) {
     }
 }
 
-fn execute_generate(index: &Bm25Index, seed: Option<&str>, doc_name: &str, is_csv: bool) {
+fn execute_generate(
+    index: &Bm25Index,
+    tagger: Option<&Tagger>,
+    seed: Option<&str>,
+    doc_name: &str,
+    is_csv: bool,
+) {
     use lume::semantic_mesh::MarkovChain;
     
     println!("\x1B[1;34mBuilding Trigram Markov Chain Model...\x1B[0m");
@@ -318,15 +324,38 @@ fn execute_generate(index: &Bm25Index, seed: Option<&str>, doc_name: &str, is_cs
     if is_csv {
         println!("\x1B[1;34mGenerating simulated CSV records...\x1B[0m");
     } else {
-        println!("\x1B[1;34mGenerating passage in the style of {}...\x1B[0m", doc_name);
+        println!("\x1B[1;34mGenerating passage in the style of {} (Guided Local Attention)...\x1B[0m", doc_name);
     }
     let start_gen = Instant::now();
-    let text = chain.generate(seed, 150);
+    let (text, attention_history) = chain.generate_steered(
+        seed,
+        150,
+        tagger,
+        &index.entity_posting_lists,
+    );
     let gen_elapsed = start_gen.elapsed();
     
     println!();
     println!("\x1B[1;36m\"{}\"\x1B[0m", text);
     println!();
+    
+    // Print dynamic attention traces if we had active FST tags!
+    if !attention_history.is_empty() {
+        println!("\x1B[1;35m--- 🧠 FST ATTENTION FEEDBACK TRACES ---\x1B[0m");
+        let mut last_printed_token = 0;
+        for (token_idx, register) in &attention_history {
+            if token_idx - last_printed_token >= 8 {
+                let mut trace_strs = Vec::new();
+                for (tag, weight) in register {
+                    trace_strs.push(format!("\x1B[1;33m{}\x1B[0m ({:.2})", tag, weight));
+                }
+                println!("  Token #{:3}: [Active Attention: {}]", token_idx, trace_strs.join(", "));
+                last_printed_token = *token_idx;
+            }
+        }
+        println!("\x1B[1;35m----------------------------------------\x1B[0m\n");
+    }
+    
     let gen_type = if is_csv { "simulated records" } else { "passage" };
     println!("\x1B[32mGenerated {} in {:.2?}\x1B[0m", gen_type, gen_elapsed);
 }
@@ -534,7 +563,7 @@ fn run_repl(
                 continue;
             } else if cmd == "generate" {
                 let seed = parts.get(1).map(|s| *s);
-                execute_generate(index, seed, doc_name, is_csv);
+                execute_generate(index, tagger, seed, doc_name, is_csv);
                 println!();
                 continue;
             } else if cmd == "chat" {

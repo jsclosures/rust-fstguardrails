@@ -195,16 +195,21 @@ A mathematical graphing layer crossing FST dictionary tags with document roaring
 ### [Primitive 7] Erik Hatcher's Semantic Boosting & Vector Integration (`hatcher-boost`)
 Our flagship hybrid integration, implementing the two-stage **Semantic Boosting** pattern pioneered by **Erik Hatcher** (co-founder of **Lucidworks**).
 *   **What it does**: Combines the precision and safety of local lexical search with the conceptual awareness of deep-neural ONNX embeddings:
-    1.  **Stage 1 (ONNX Semantic Retrieval)**: Establishes a connection to an ephemeral, time-seeded session on `https://shivvr.nuts.services/` to retrieve top conceptual candidates and their cosine similarity scores.
-    2.  **Stage 2 (Local Lexical Scoring)**: Calculates standard BM25 rankings for candidates.
-    3.  **Blending Math**: Blends both scores using Hatcher's formulation, allowing the semantic vector similarity to boost the lexical relevance score:
+    1.  **Stage 1 (ONNX Semantic Retrieval & Local Cache)**: Searches our local persistent index (`.lume-semantic-cache.json`) to find query results instantly offline (**<1ms**). On a cache miss, it lazily connects to an ephemeral session on `https://shivvr.nuts.services/` to fetch semantic similarity scores and automatically preserves the query to the local cache.
+    2.  **Stage 2 (Local Lexical Scoring)**: Calculates standard BM25 rankings.
+    3.  **True Union Blending**: Blends the candidates into a true Set Engine Union. If a document matches lexically, we apply Erik Hatcher's multiplicative boost:
         ```text
         Score_hybrid = Score_BM25 * (1.0 + alpha * Similarity_semantic)
         ```
+        If a document only matches semantically (without keyword matches), it falls back to its raw `Similarity_semantic` score, ensuring conceptual matches are still ranked and retrieved.
 *   **OG Code Reference**:
     ```rust
     // Core hybrid blend in src/bin/hatcher_boost.rs
-    let hybrid_score = bm25_score * (1.0 + alpha * semantic_score);
+    let hybrid_score = if bm25_score > 0.0 {
+        bm25_score * (1.0 + alpha * sem_score)
+    } else {
+        sem_score
+    };
     ```
 
 ---
