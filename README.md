@@ -181,11 +181,11 @@ Our flagship hybrid integration, implementing the two-stage **Semantic Boosting*
     1.  **Stage 1 (ONNX Semantic Retrieval)**: Establishes a connection to an ephemeral, time-seeded session on `https://shivvr.nuts.services/` to retrieve top conceptual candidates and their cosine similarity scores.
     2.  **Stage 2 (Local Lexical Scoring)**: Calculates standard BM25 rankings for candidates.
     3.  **Blending Math**: Blends both scores using Hatcher's formulation, allowing the semantic vector similarity to boost the lexical relevance score:
-        $$\text{Score}_{\text{hybrid}} = \text{Score}_{\text{BM25}} \times (1.0 + \alpha \times \text{Similarity}_{\text{semantic}})$$
+        $$\text{Score}_{\text{hybrid}} = \text{Score}_{\text{BM25}} + (\alpha \times \text{Similarity}_{\text{semantic}})$$
 *   **OG Code Reference**:
     ```rust
     // Core hybrid blend in src/bin/hatcher_boost.rs
-    let hybrid_score = bm25_score * (1.0 + alpha * semantic_score);
+    let hybrid_score = bm25_score + (alpha * semantic_score);
     ```
 
 ---
