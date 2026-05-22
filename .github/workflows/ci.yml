@@ -1,0 +1,41 @@
+name: Rust Continuous Integration
+
+on:
+  push:
+    branches: [ "main", "bm25-search-mesh" ]
+  pull_request:
+    branches: [ "main", "bm25-search-mesh" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Stable Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Verify compilation (cargo check)
+        run: cargo check --verbose
+
+      - name: Run unit test suite
+        run: cargo test --verbose

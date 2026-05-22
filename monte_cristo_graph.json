@@ -1,140 +1,1942 @@
 {
   "entities": [
     {
-      "id": "AGENT",
-      "label": "Vesper-Echo",
-      "kind": "agents",
-      "frequency": 5
+      "id": "ALBERT",
+      "label": "Albert de Morcerf",
+      "kind": "character",
+      "frequency": 41
     },
     {
-      "id": "CORP",
-      "label": "Aegis-Systems",
-      "kind": "agents",
-      "frequency": 5
+      "id": "AUTEUIL",
+      "label": "Auteuil",
+      "kind": "location",
+      "frequency": 22
     },
     {
-      "id": "NET_ROUTE",
-      "label": "IP-192.168",
-      "kind": "hashes",
-      "frequency": 2
+      "id": "BERTUCCIO",
+      "label": "Bertuccio",
+      "kind": "character",
+      "frequency": 24
     },
     {
-      "id": "SECTOR",
-      "label": "Neon District",
-      "kind": "sectors",
-      "frequency": 5
+      "id": "CADEROUSSE",
+      "label": "Caderousse",
+      "kind": "character",
+      "frequency": 23
     },
     {
-      "id": "SERIAL",
-      "label": "SN-4521-X",
-      "kind": "hashes",
-      "frequency": 2
+      "id": "CHATEAUDIF",
+      "label": "Château d’If",
+      "kind": "location",
+      "frequency": 17
     },
     {
-      "id": "TRANSACTION",
-      "label": "TX-89AB12",
-      "kind": "hashes",
-      "frequency": 3
+      "id": "CONSPIRACY",
+      "label": "Conspiracy",
+      "kind": "theme",
+      "frequency": 10
+    },
+    {
+      "id": "DANGLARS",
+      "label": "Danglars",
+      "kind": "character",
+      "frequency": 63
+    },
+    {
+      "id": "DANTES",
+      "label": "Edmond Dantès",
+      "kind": "character",
+      "frequency": 37
+    },
+    {
+      "id": "FARIA",
+      "label": "Abbé Faria",
+      "kind": "character",
+      "frequency": 15
+    },
+    {
+      "id": "FERNAND",
+      "label": "Fernand Mondego",
+      "kind": "character",
+      "frequency": 19
+    },
+    {
+      "id": "FRANZ",
+      "label": "Franz d’Épinay",
+      "kind": "character",
+      "frequency": 30
+    },
+    {
+      "id": "HAYDEE",
+      "label": "Haydée",
+      "kind": "character",
+      "frequency": 18
+    },
+    {
+      "id": "MARSEILLES",
+      "label": "Marseilles",
+      "kind": "location",
+      "frequency": 45
+    },
+    {
+      "id": "MAXIMILIAN",
+      "label": "Maximilian. Morrel",
+      "kind": "character",
+      "frequency": 31
+    },
+    {
+      "id": "MERCEDES",
+      "label": "Mercédès",
+      "kind": "character",
+      "frequency": 29
+    },
+    {
+      "id": "MONTECRISTO",
+      "label": "Monte Cristo",
+      "kind": "location",
+      "frequency": 84
+    },
+    {
+      "id": "NOIRTIER",
+      "label": "Noirtier",
+      "kind": "character",
+      "frequency": 36
+    },
+    {
+      "id": "PARIS",
+      "label": "Paris",
+      "kind": "location",
+      "frequency": 81
+    },
+    {
+      "id": "PHARAON",
+      "label": "Pharaon",
+      "kind": "theme",
+      "frequency": 18
+    },
+    {
+      "id": "ROME",
+      "label": "Rome",
+      "kind": "location",
+      "frequency": 34
+    },
+    {
+      "id": "TREASURE",
+      "label": "Treasure",
+      "kind": "theme",
+      "frequency": 21
+    },
+    {
+      "id": "VALENTINE",
+      "label": "Valentine.” Villefort",
+      "kind": "character",
+      "frequency": 35
+    },
+    {
+      "id": "VENGEANCE",
+      "label": "vengeance",
+      "kind": "theme",
+      "frequency": 38
+    },
+    {
+      "id": "VILLEFORT",
+      "label": "Villefort",
+      "kind": "character",
+      "frequency": 73
     }
   ],
   "links": [
     {
-      "source": "AGENT",
-      "target": "CORP",
-      "similarity": 1.0000,
-      "intersection": 5,
-      "union": 5
+      "source": "MONTECRISTO",
+      "target": "PARIS",
+      "similarity": 0.5865,
+      "intersection": 61,
+      "union": 104
     },
     {
-      "source": "AGENT",
-      "target": "SECTOR",
-      "similarity": 1.0000,
-      "intersection": 5,
-      "union": 5
+      "source": "NOIRTIER",
+      "target": "VALENTINE",
+      "similarity": 0.5778,
+      "intersection": 26,
+      "union": 45
     },
     {
-      "source": "CORP",
-      "target": "SECTOR",
-      "similarity": 1.0000,
-      "intersection": 5,
-      "union": 5
+      "source": "DANGLARS",
+      "target": "PARIS",
+      "similarity": 0.5319,
+      "intersection": 50,
+      "union": 94
     },
     {
-      "source": "AGENT",
-      "target": "TRANSACTION",
-      "similarity": 0.6000,
-      "intersection": 3,
-      "union": 5
+      "source": "ALBERT",
+      "target": "FRANZ",
+      "similarity": 0.5106,
+      "intersection": 24,
+      "union": 47
     },
     {
-      "source": "CORP",
-      "target": "TRANSACTION",
-      "similarity": 0.6000,
-      "intersection": 3,
-      "union": 5
+      "source": "PARIS",
+      "target": "VILLEFORT",
+      "similarity": 0.4951,
+      "intersection": 51,
+      "union": 103
     },
     {
-      "source": "SECTOR",
-      "target": "TRANSACTION",
-      "similarity": 0.6000,
-      "intersection": 3,
-      "union": 5
+      "source": "NOIRTIER",
+      "target": "VILLEFORT",
+      "similarity": 0.4932,
+      "intersection": 36,
+      "union": 73
     },
     {
-      "source": "AGENT",
-      "target": "NET_ROUTE",
+      "source": "CHATEAUDIF",
+      "target": "FARIA",
+      "similarity": 0.4545,
+      "intersection": 10,
+      "union": 22
+    },
+    {
+      "source": "VALENTINE",
+      "target": "VILLEFORT",
+      "similarity": 0.4400,
+      "intersection": 33,
+      "union": 75
+    },
+    {
+      "source": "DANTES",
+      "target": "MARSEILLES",
+      "similarity": 0.4386,
+      "intersection": 25,
+      "union": 57
+    },
+    {
+      "source": "ALBERT",
+      "target": "MONTECRISTO",
+      "similarity": 0.4368,
+      "intersection": 38,
+      "union": 87
+    },
+    {
+      "source": "DANTES",
+      "target": "MERCEDES",
+      "similarity": 0.4348,
+      "intersection": 20,
+      "union": 46
+    },
+    {
+      "source": "DANGLARS",
+      "target": "MONTECRISTO",
+      "similarity": 0.4272,
+      "intersection": 44,
+      "union": 103
+    },
+    {
+      "source": "ALBERT",
+      "target": "PARIS",
+      "similarity": 0.4186,
+      "intersection": 36,
+      "union": 86
+    },
+    {
+      "source": "MONTECRISTO",
+      "target": "VILLEFORT",
+      "similarity": 0.4144,
+      "intersection": 46,
+      "union": 111
+    },
+    {
+      "source": "MAXIMILIAN",
+      "target": "VALENTINE",
+      "similarity": 0.4043,
+      "intersection": 19,
+      "union": 47
+    },
+    {
+      "source": "DANGLARS",
+      "target": "VILLEFORT",
+      "similarity": 0.4021,
+      "intersection": 39,
+      "union": 97
+    },
+    {
+      "source": "MARSEILLES",
+      "target": "PARIS",
       "similarity": 0.4000,
-      "intersection": 2,
-      "union": 5
+      "intersection": 36,
+      "union": 90
     },
     {
-      "source": "AGENT",
-      "target": "SERIAL",
-      "similarity": 0.4000,
-      "intersection": 2,
-      "union": 5
+      "source": "DANTES",
+      "target": "PHARAON",
+      "similarity": 0.3750,
+      "intersection": 15,
+      "union": 40
     },
     {
-      "source": "CORP",
-      "target": "NET_ROUTE",
-      "similarity": 0.4000,
-      "intersection": 2,
-      "union": 5
+      "source": "MARSEILLES",
+      "target": "VILLEFORT",
+      "similarity": 0.3721,
+      "intersection": 32,
+      "union": 86
     },
     {
-      "source": "CORP",
-      "target": "SERIAL",
-      "similarity": 0.4000,
-      "intersection": 2,
-      "union": 5
+      "source": "FERNAND",
+      "target": "MERCEDES",
+      "similarity": 0.3714,
+      "intersection": 13,
+      "union": 35
     },
     {
-      "source": "NET_ROUTE",
-      "target": "SECTOR",
-      "similarity": 0.4000,
-      "intersection": 2,
-      "union": 5
+      "source": "DANTES",
+      "target": "FARIA",
+      "similarity": 0.3684,
+      "intersection": 14,
+      "union": 38
     },
     {
-      "source": "SECTOR",
-      "target": "SERIAL",
-      "similarity": 0.4000,
-      "intersection": 2,
-      "union": 5
+      "source": "CHATEAUDIF",
+      "target": "DANTES",
+      "similarity": 0.3500,
+      "intersection": 14,
+      "union": 40
     },
     {
-      "source": "NET_ROUTE",
-      "target": "SERIAL",
+      "source": "MARSEILLES",
+      "target": "MERCEDES",
+      "similarity": 0.3455,
+      "intersection": 19,
+      "union": 55
+    },
+    {
+      "source": "MERCEDES",
+      "target": "PHARAON",
+      "similarity": 0.3429,
+      "intersection": 12,
+      "union": 35
+    },
+    {
+      "source": "MAXIMILIAN",
+      "target": "NOIRTIER",
+      "similarity": 0.3400,
+      "intersection": 17,
+      "union": 50
+    },
+    {
+      "source": "FARIA",
+      "target": "TREASURE",
       "similarity": 0.3333,
-      "intersection": 1,
-      "union": 3
+      "intersection": 9,
+      "union": 27
     },
     {
-      "source": "NET_ROUTE",
-      "target": "TRANSACTION",
-      "similarity": 0.2500,
+      "source": "PARIS",
+      "target": "VENGEANCE",
+      "similarity": 0.3222,
+      "intersection": 29,
+      "union": 90
+    },
+    {
+      "source": "ALBERT",
+      "target": "ROME",
+      "similarity": 0.3158,
+      "intersection": 18,
+      "union": 57
+    },
+    {
+      "source": "DANTES",
+      "target": "VENGEANCE",
+      "similarity": 0.3158,
+      "intersection": 18,
+      "union": 57
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "BERTUCCIO",
+      "similarity": 0.3143,
+      "intersection": 11,
+      "union": 35
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "FERNAND",
+      "similarity": 0.3125,
+      "intersection": 10,
+      "union": 32
+    },
+    {
+      "source": "MARSEILLES",
+      "target": "PHARAON",
+      "similarity": 0.3125,
+      "intersection": 15,
+      "union": 48
+    },
+    {
+      "source": "MONTECRISTO",
+      "target": "ROME",
+      "similarity": 0.3111,
+      "intersection": 28,
+      "union": 90
+    },
+    {
+      "source": "ALBERT",
+      "target": "DANGLARS",
+      "similarity": 0.3000,
+      "intersection": 24,
+      "union": 80
+    },
+    {
+      "source": "DANGLARS",
+      "target": "MERCEDES",
+      "similarity": 0.2958,
+      "intersection": 21,
+      "union": 71
+    },
+    {
+      "source": "FRANZ",
+      "target": "MONTECRISTO",
+      "similarity": 0.2955,
+      "intersection": 26,
+      "union": 88
+    },
+    {
+      "source": "DANGLARS",
+      "target": "MARSEILLES",
+      "similarity": 0.2857,
+      "intersection": 24,
+      "union": 84
+    },
+    {
+      "source": "MARSEILLES",
+      "target": "NOIRTIER",
+      "similarity": 0.2857,
+      "intersection": 18,
+      "union": 63
+    },
+    {
+      "source": "MONTECRISTO",
+      "target": "VENGEANCE",
+      "similarity": 0.2842,
+      "intersection": 27,
+      "union": 95
+    },
+    {
+      "source": "MAXIMILIAN",
+      "target": "VILLEFORT",
+      "similarity": 0.2840,
+      "intersection": 23,
+      "union": 81
+    },
+    {
+      "source": "FRANZ",
+      "target": "ROME",
+      "similarity": 0.2800,
+      "intersection": 14,
+      "union": 50
+    },
+    {
+      "source": "FRANZ",
+      "target": "PARIS",
+      "similarity": 0.2759,
+      "intersection": 24,
+      "union": 87
+    },
+    {
+      "source": "FRANZ",
+      "target": "MAXIMILIAN",
+      "similarity": 0.2708,
+      "intersection": 13,
+      "union": 48
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "MONTECRISTO",
+      "similarity": 0.2706,
+      "intersection": 23,
+      "union": 85
+    },
+    {
+      "source": "MONTECRISTO",
+      "target": "VALENTINE",
+      "similarity": 0.2660,
+      "intersection": 25,
+      "union": 94
+    },
+    {
+      "source": "MERCEDES",
+      "target": "PARIS",
+      "similarity": 0.2644,
+      "intersection": 23,
+      "union": 87
+    },
+    {
+      "source": "MAXIMILIAN",
+      "target": "MONTECRISTO",
+      "similarity": 0.2637,
+      "intersection": 24,
+      "union": 91
+    },
+    {
+      "source": "PARIS",
+      "target": "ROME",
+      "similarity": 0.2637,
+      "intersection": 24,
+      "union": 91
+    },
+    {
+      "source": "ALBERT",
+      "target": "MAXIMILIAN",
+      "similarity": 0.2632,
+      "intersection": 15,
+      "union": 57
+    },
+    {
+      "source": "DANGLARS",
+      "target": "FERNAND",
+      "similarity": 0.2615,
+      "intersection": 17,
+      "union": 65
+    },
+    {
+      "source": "VENGEANCE",
+      "target": "VILLEFORT",
+      "similarity": 0.2614,
+      "intersection": 23,
+      "union": 88
+    },
+    {
+      "source": "MARSEILLES",
+      "target": "VENGEANCE",
+      "similarity": 0.2576,
+      "intersection": 17,
+      "union": 66
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "DANGLARS",
+      "similarity": 0.2464,
+      "intersection": 17,
+      "union": 69
+    },
+    {
+      "source": "DANTES",
+      "target": "FERNAND",
+      "similarity": 0.2444,
+      "intersection": 11,
+      "union": 45
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "PHARAON",
+      "similarity": 0.2424,
+      "intersection": 8,
+      "union": 33
+    },
+    {
+      "source": "MERCEDES",
+      "target": "VENGEANCE",
+      "similarity": 0.2407,
+      "intersection": 13,
+      "union": 54
+    },
+    {
+      "source": "ALBERT",
+      "target": "VILLEFORT",
+      "similarity": 0.2391,
+      "intersection": 22,
+      "union": 92
+    },
+    {
+      "source": "FERNAND",
+      "target": "VENGEANCE",
+      "similarity": 0.2391,
+      "intersection": 11,
+      "union": 46
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "MERCEDES",
+      "similarity": 0.2381,
+      "intersection": 10,
+      "union": 42
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "MARSEILLES",
+      "similarity": 0.2364,
+      "intersection": 13,
+      "union": 55
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "PARIS",
+      "similarity": 0.2353,
+      "intersection": 20,
+      "union": 85
+    },
+    {
+      "source": "DANTES",
+      "target": "TREASURE",
+      "similarity": 0.2340,
+      "intersection": 11,
+      "union": 47
+    },
+    {
+      "source": "FERNAND",
+      "target": "PHARAON",
+      "similarity": 0.2333,
+      "intersection": 7,
+      "union": 30
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "MONTECRISTO",
+      "similarity": 0.2326,
+      "intersection": 20,
+      "union": 86
+    },
+    {
+      "source": "DANTES",
+      "target": "PARIS",
+      "similarity": 0.2292,
+      "intersection": 22,
+      "union": 96
+    },
+    {
+      "source": "MARSEILLES",
+      "target": "MONTECRISTO",
+      "similarity": 0.2286,
+      "intersection": 24,
+      "union": 105
+    },
+    {
+      "source": "ALBERT",
+      "target": "BERTUCCIO",
+      "similarity": 0.2264,
+      "intersection": 12,
+      "union": 53
+    },
+    {
+      "source": "FRANZ",
+      "target": "VALENTINE",
+      "similarity": 0.2264,
+      "intersection": 12,
+      "union": 53
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "PARIS",
+      "similarity": 0.2262,
+      "intersection": 19,
+      "union": 84
+    },
+    {
+      "source": "HAYDEE",
+      "target": "MAXIMILIAN",
+      "similarity": 0.2250,
+      "intersection": 9,
+      "union": 40
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "DANTES",
+      "similarity": 0.2245,
+      "intersection": 11,
+      "union": 49
+    },
+    {
+      "source": "DANTES",
+      "target": "VILLEFORT",
+      "similarity": 0.2222,
+      "intersection": 20,
+      "union": 90
+    },
+    {
+      "source": "NOIRTIER",
+      "target": "PARIS",
+      "similarity": 0.2188,
+      "intersection": 21,
+      "union": 96
+    },
+    {
+      "source": "CONSPIRACY",
+      "target": "PHARAON",
+      "similarity": 0.2174,
+      "intersection": 5,
+      "union": 23
+    },
+    {
+      "source": "HAYDEE",
+      "target": "VENGEANCE",
+      "similarity": 0.2174,
+      "intersection": 10,
+      "union": 46
+    },
+    {
+      "source": "MAXIMILIAN",
+      "target": "PARIS",
+      "similarity": 0.2174,
+      "intersection": 20,
+      "union": 92
+    },
+    {
+      "source": "CHATEAUDIF",
+      "target": "MARSEILLES",
+      "similarity": 0.2157,
+      "intersection": 11,
+      "union": 51
+    },
+    {
+      "source": "MERCEDES",
+      "target": "VILLEFORT",
+      "similarity": 0.2143,
+      "intersection": 18,
+      "union": 84
+    },
+    {
+      "source": "DANGLARS",
+      "target": "ROME",
+      "similarity": 0.2125,
+      "intersection": 17,
+      "union": 80
+    },
+    {
+      "source": "FRANZ",
+      "target": "VILLEFORT",
+      "similarity": 0.2118,
+      "intersection": 18,
+      "union": 85
+    },
+    {
+      "source": "CHATEAUDIF",
+      "target": "MERCEDES",
+      "similarity": 0.2105,
+      "intersection": 8,
+      "union": 38
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "PARIS",
+      "similarity": 0.2093,
+      "intersection": 18,
+      "union": 86
+    },
+    {
+      "source": "PARIS",
+      "target": "VALENTINE",
+      "similarity": 0.2083,
+      "intersection": 20,
+      "union": 96
+    },
+    {
+      "source": "ALBERT",
+      "target": "MERCEDES",
+      "similarity": 0.2069,
+      "intersection": 12,
+      "union": 58
+    },
+    {
+      "source": "MARSEILLES",
+      "target": "MAXIMILIAN",
+      "similarity": 0.2063,
+      "intersection": 13,
+      "union": 63
+    },
+    {
+      "source": "FERNAND",
+      "target": "PARIS",
+      "similarity": 0.2048,
+      "intersection": 17,
+      "union": 83
+    },
+    {
+      "source": "DANGLARS",
+      "target": "VENGEANCE",
+      "similarity": 0.2024,
+      "intersection": 17,
+      "union": 84
+    },
+    {
+      "source": "ALBERT",
+      "target": "FERNAND",
+      "similarity": 0.2000,
+      "intersection": 10,
+      "union": 50
+    },
+    {
+      "source": "MARSEILLES",
+      "target": "TREASURE",
+      "similarity": 0.2000,
+      "intersection": 11,
+      "union": 55
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "DANGLARS",
+      "similarity": 0.1972,
+      "intersection": 14,
+      "union": 71
+    },
+    {
+      "source": "DANGLARS",
+      "target": "VALENTINE",
+      "similarity": 0.1951,
+      "intersection": 16,
+      "union": 82
+    },
+    {
+      "source": "FERNAND",
+      "target": "HAYDEE",
+      "similarity": 0.1935,
+      "intersection": 6,
+      "union": 31
+    },
+    {
+      "source": "HAYDEE",
+      "target": "PARIS",
+      "similarity": 0.1928,
+      "intersection": 16,
+      "union": 83
+    },
+    {
+      "source": "DANGLARS",
+      "target": "DANTES",
+      "similarity": 0.1905,
+      "intersection": 16,
+      "union": 84
+    },
+    {
+      "source": "MONTECRISTO",
+      "target": "NOIRTIER",
+      "similarity": 0.1881,
+      "intersection": 19,
+      "union": 101
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "VILLEFORT",
+      "similarity": 0.1875,
+      "intersection": 15,
+      "union": 80
+    },
+    {
+      "source": "HAYDEE",
+      "target": "MONTECRISTO",
+      "similarity": 0.1860,
+      "intersection": 16,
+      "union": 86
+    },
+    {
+      "source": "FERNAND",
+      "target": "MARSEILLES",
+      "similarity": 0.1852,
+      "intersection": 10,
+      "union": 54
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "CADEROUSSE",
+      "similarity": 0.1842,
+      "intersection": 7,
+      "union": 38
+    },
+    {
+      "source": "ALBERT",
+      "target": "HAYDEE",
+      "similarity": 0.1800,
+      "intersection": 9,
+      "union": 50
+    },
+    {
+      "source": "MONTECRISTO",
+      "target": "TREASURE",
+      "similarity": 0.1798,
+      "intersection": 16,
+      "union": 89
+    },
+    {
+      "source": "CONSPIRACY",
+      "target": "NOIRTIER",
+      "similarity": 0.1795,
+      "intersection": 7,
+      "union": 39
+    },
+    {
+      "source": "FRANZ",
+      "target": "NOIRTIER",
+      "similarity": 0.1786,
+      "intersection": 10,
+      "union": 56
+    },
+    {
+      "source": "DANGLARS",
+      "target": "FRANZ",
+      "similarity": 0.1772,
+      "intersection": 14,
+      "union": 79
+    },
+    {
+      "source": "FARIA",
+      "target": "MARSEILLES",
+      "similarity": 0.1765,
+      "intersection": 9,
+      "union": 51
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "CADEROUSSE",
+      "similarity": 0.1750,
+      "intersection": 7,
+      "union": 40
+    },
+    {
+      "source": "DANTES",
+      "target": "MONTECRISTO",
+      "similarity": 0.1748,
+      "intersection": 18,
+      "union": 103
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "FRANZ",
+      "similarity": 0.1739,
+      "intersection": 8,
+      "union": 46
+    },
+    {
+      "source": "DANGLARS",
+      "target": "PHARAON",
+      "similarity": 0.1739,
+      "intersection": 12,
+      "union": 69
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "VENGEANCE",
+      "similarity": 0.1731,
+      "intersection": 9,
+      "union": 52
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "VILLEFORT",
+      "similarity": 0.1707,
+      "intersection": 14,
+      "union": 82
+    },
+    {
+      "source": "CHATEAUDIF",
+      "target": "VENGEANCE",
+      "similarity": 0.1702,
+      "intersection": 8,
+      "union": 47
+    },
+    {
+      "source": "CONSPIRACY",
+      "target": "MARSEILLES",
+      "similarity": 0.1702,
+      "intersection": 8,
+      "union": 47
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "VENGEANCE",
+      "similarity": 0.1698,
+      "intersection": 9,
+      "union": 53
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "MARSEILLES",
+      "similarity": 0.1695,
+      "intersection": 10,
+      "union": 59
+    },
+    {
+      "source": "MAXIMILIAN",
+      "target": "VENGEANCE",
+      "similarity": 0.1695,
+      "intersection": 10,
+      "union": 59
+    },
+    {
+      "source": "ALBERT",
+      "target": "VALENTINE",
+      "similarity": 0.1692,
+      "intersection": 11,
+      "union": 65
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "HAYDEE",
+      "similarity": 0.1667,
+      "intersection": 6,
+      "union": 36
+    },
+    {
+      "source": "CHATEAUDIF",
+      "target": "PHARAON",
+      "similarity": 0.1667,
+      "intersection": 5,
+      "union": 30
+    },
+    {
+      "source": "ROME",
+      "target": "VILLEFORT",
+      "similarity": 0.1630,
+      "intersection": 15,
+      "union": 92
+    },
+    {
+      "source": "ROME",
+      "target": "VENGEANCE",
+      "similarity": 0.1613,
+      "intersection": 10,
+      "union": 62
+    },
+    {
+      "source": "DANGLARS",
+      "target": "MAXIMILIAN",
+      "similarity": 0.1605,
+      "intersection": 13,
+      "union": 81
+    },
+    {
+      "source": "DANTES",
+      "target": "NOIRTIER",
+      "similarity": 0.1587,
+      "intersection": 10,
+      "union": 63
+    },
+    {
+      "source": "FARIA",
+      "target": "MERCEDES",
+      "similarity": 0.1579,
+      "intersection": 6,
+      "union": 38
+    },
+    {
+      "source": "FRANZ",
+      "target": "MERCEDES",
+      "similarity": 0.1569,
+      "intersection": 8,
+      "union": 51
+    },
+    {
+      "source": "TREASURE",
+      "target": "VENGEANCE",
+      "similarity": 0.1569,
+      "intersection": 8,
+      "union": 51
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "VILLEFORT",
+      "similarity": 0.1548,
+      "intersection": 13,
+      "union": 84
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "VENGEANCE",
+      "similarity": 0.1538,
+      "intersection": 8,
+      "union": 52
+    },
+    {
+      "source": "FRANZ",
+      "target": "MARSEILLES",
+      "similarity": 0.1538,
+      "intersection": 10,
+      "union": 65
+    },
+    {
+      "source": "MERCEDES",
+      "target": "MONTECRISTO",
+      "similarity": 0.1531,
+      "intersection": 15,
+      "union": 98
+    },
+    {
+      "source": "CHATEAUDIF",
+      "target": "TREASURE",
+      "similarity": 0.1515,
+      "intersection": 5,
+      "union": 33
+    },
+    {
+      "source": "DANGLARS",
+      "target": "NOIRTIER",
+      "similarity": 0.1512,
+      "intersection": 13,
+      "union": 86
+    },
+    {
+      "source": "PARIS",
+      "target": "PHARAON",
+      "similarity": 0.1512,
+      "intersection": 13,
+      "union": 86
+    },
+    {
+      "source": "ALBERT",
+      "target": "MARSEILLES",
+      "similarity": 0.1467,
+      "intersection": 11,
+      "union": 75
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "MAXIMILIAN",
+      "similarity": 0.1458,
+      "intersection": 7,
+      "union": 48
+    },
+    {
+      "source": "ROME",
+      "target": "TREASURE",
+      "similarity": 0.1458,
+      "intersection": 7,
+      "union": 48
+    },
+    {
+      "source": "ALBERT",
+      "target": "VENGEANCE",
+      "similarity": 0.1449,
+      "intersection": 10,
+      "union": 69
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "DANGLARS",
+      "similarity": 0.1447,
+      "intersection": 11,
+      "union": 76
+    },
+    {
+      "source": "MARSEILLES",
+      "target": "VALENTINE",
+      "similarity": 0.1429,
+      "intersection": 10,
+      "union": 70
+    },
+    {
+      "source": "PHARAON",
+      "target": "VENGEANCE",
+      "similarity": 0.1429,
+      "intersection": 7,
+      "union": 49
+    },
+    {
+      "source": "NOIRTIER",
+      "target": "VENGEANCE",
+      "similarity": 0.1385,
+      "intersection": 9,
+      "union": 65
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "MONTECRISTO",
+      "similarity": 0.1383,
+      "intersection": 13,
+      "union": 94
+    },
+    {
+      "source": "FARIA",
+      "target": "PHARAON",
+      "similarity": 0.1379,
+      "intersection": 4,
+      "union": 29
+    },
+    {
+      "source": "HAYDEE",
+      "target": "VILLEFORT",
+      "similarity": 0.1375,
+      "intersection": 11,
+      "union": 80
+    },
+    {
+      "source": "FERNAND",
+      "target": "VILLEFORT",
+      "similarity": 0.1358,
+      "intersection": 11,
+      "union": 81
+    },
+    {
+      "source": "FARIA",
+      "target": "FERNAND",
+      "similarity": 0.1333,
+      "intersection": 4,
+      "union": 30
+    },
+    {
+      "source": "PARIS",
+      "target": "TREASURE",
+      "similarity": 0.1333,
+      "intersection": 12,
+      "union": 90
+    },
+    {
+      "source": "MAXIMILIAN",
+      "target": "MERCEDES",
+      "similarity": 0.1321,
+      "intersection": 7,
+      "union": 53
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "TREASURE",
+      "similarity": 0.1316,
+      "intersection": 5,
+      "union": 38
+    },
+    {
+      "source": "CHATEAUDIF",
+      "target": "HAYDEE",
+      "similarity": 0.1290,
+      "intersection": 4,
+      "union": 31
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "TREASURE",
+      "similarity": 0.1282,
+      "intersection": 5,
+      "union": 39
+    },
+    {
+      "source": "FARIA",
+      "target": "VENGEANCE",
+      "similarity": 0.1277,
+      "intersection": 6,
+      "union": 47
+    },
+    {
+      "source": "CHATEAUDIF",
+      "target": "FERNAND",
+      "similarity": 0.1250,
+      "intersection": 4,
+      "union": 32
+    },
+    {
+      "source": "HAYDEE",
+      "target": "MARSEILLES",
+      "similarity": 0.1250,
+      "intersection": 7,
+      "union": 56
+    },
+    {
+      "source": "NOIRTIER",
+      "target": "PHARAON",
+      "similarity": 0.1250,
+      "intersection": 6,
+      "union": 48
+    },
+    {
+      "source": "PHARAON",
+      "target": "VILLEFORT",
+      "similarity": 0.1235,
+      "intersection": 10,
+      "union": 81
+    },
+    {
+      "source": "CONSPIRACY",
+      "target": "DANTES",
+      "similarity": 0.1190,
+      "intersection": 5,
+      "union": 42
+    },
+    {
+      "source": "HAYDEE",
+      "target": "MERCEDES",
+      "similarity": 0.1190,
+      "intersection": 5,
+      "union": 42
+    },
+    {
+      "source": "ALBERT",
+      "target": "NOIRTIER",
+      "similarity": 0.1159,
+      "intersection": 8,
+      "union": 69
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "ROME",
+      "similarity": 0.1154,
+      "intersection": 6,
+      "union": 52
+    },
+    {
+      "source": "DANTES",
+      "target": "MAXIMILIAN",
+      "similarity": 0.1148,
+      "intersection": 7,
+      "union": 61
+    },
+    {
+      "source": "DANGLARS",
+      "target": "HAYDEE",
+      "similarity": 0.1096,
+      "intersection": 8,
+      "union": 73
+    },
+    {
+      "source": "DANTES",
+      "target": "ROME",
+      "similarity": 0.1094,
+      "intersection": 7,
+      "union": 64
+    },
+    {
+      "source": "FERNAND",
+      "target": "MONTECRISTO",
+      "similarity": 0.1075,
+      "intersection": 10,
+      "union": 93
+    },
+    {
+      "source": "CONSPIRACY",
+      "target": "VILLEFORT",
+      "similarity": 0.1067,
+      "intersection": 8,
+      "union": 75
+    },
+    {
+      "source": "VALENTINE",
+      "target": "VENGEANCE",
+      "similarity": 0.1061,
+      "intersection": 7,
+      "union": 66
+    },
+    {
+      "source": "ALBERT",
+      "target": "AUTEUIL",
+      "similarity": 0.1053,
+      "intersection": 6,
+      "union": 57
+    },
+    {
+      "source": "DANGLARS",
+      "target": "TREASURE",
+      "similarity": 0.1053,
+      "intersection": 8,
+      "union": 76
+    },
+    {
+      "source": "CHATEAUDIF",
+      "target": "NOIRTIER",
+      "similarity": 0.1042,
+      "intersection": 5,
+      "union": 48
+    },
+    {
+      "source": "HAYDEE",
+      "target": "VALENTINE",
+      "similarity": 0.1042,
+      "intersection": 5,
+      "union": 48
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "FERNAND",
+      "similarity": 0.1026,
+      "intersection": 4,
+      "union": 39
+    },
+    {
+      "source": "MAXIMILIAN",
+      "target": "ROME",
+      "similarity": 0.1017,
+      "intersection": 6,
+      "union": 59
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "CONSPIRACY",
+      "similarity": 0.1000,
+      "intersection": 3,
+      "union": 30
+    },
+    {
+      "source": "DANTES",
+      "target": "HAYDEE",
+      "similarity": 0.1000,
+      "intersection": 5,
+      "union": 50
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "MARSEILLES",
+      "similarity": 0.0984,
+      "intersection": 6,
+      "union": 61
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "ROME",
+      "similarity": 0.0980,
+      "intersection": 5,
+      "union": 51
+    },
+    {
+      "source": "CHATEAUDIF",
+      "target": "MONTECRISTO",
+      "similarity": 0.0978,
+      "intersection": 9,
+      "union": 92
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "TREASURE",
+      "similarity": 0.0976,
+      "intersection": 4,
+      "union": 41
+    },
+    {
+      "source": "CHATEAUDIF",
+      "target": "VILLEFORT",
+      "similarity": 0.0976,
+      "intersection": 8,
+      "union": 82
+    },
+    {
+      "source": "MARSEILLES",
+      "target": "ROME",
+      "similarity": 0.0972,
+      "intersection": 7,
+      "union": 72
+    },
+    {
+      "source": "FRANZ",
+      "target": "VENGEANCE",
+      "similarity": 0.0968,
+      "intersection": 6,
+      "union": 62
+    },
+    {
+      "source": "CONSPIRACY",
+      "target": "PARIS",
+      "similarity": 0.0964,
+      "intersection": 8,
+      "union": 83
+    },
+    {
+      "source": "ROME",
+      "target": "VALENTINE",
+      "similarity": 0.0952,
+      "intersection": 6,
+      "union": 63
+    },
+    {
+      "source": "TREASURE",
+      "target": "VILLEFORT",
+      "similarity": 0.0930,
+      "intersection": 8,
+      "union": 86
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "VALENTINE",
+      "similarity": 0.0926,
+      "intersection": 5,
+      "union": 54
+    },
+    {
+      "source": "CHATEAUDIF",
+      "target": "MAXIMILIAN",
+      "similarity": 0.0909,
+      "intersection": 4,
+      "union": 44
+    },
+    {
+      "source": "FRANZ",
+      "target": "HAYDEE",
+      "similarity": 0.0909,
+      "intersection": 4,
+      "union": 44
+    },
+    {
+      "source": "FARIA",
+      "target": "ROME",
+      "similarity": 0.0889,
+      "intersection": 4,
+      "union": 45
+    },
+    {
+      "source": "FARIA",
+      "target": "MONTECRISTO",
+      "similarity": 0.0879,
+      "intersection": 8,
+      "union": 91
+    },
+    {
+      "source": "MERCEDES",
+      "target": "TREASURE",
+      "similarity": 0.0870,
+      "intersection": 4,
+      "union": 46
+    },
+    {
+      "source": "FARIA",
+      "target": "VILLEFORT",
+      "similarity": 0.0864,
+      "intersection": 7,
+      "union": 81
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "FARIA",
+      "similarity": 0.0857,
+      "intersection": 3,
+      "union": 35
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "FRANZ",
+      "similarity": 0.0833,
+      "intersection": 4,
+      "union": 48
+    },
+    {
+      "source": "CONSPIRACY",
+      "target": "MERCEDES",
+      "similarity": 0.0833,
+      "intersection": 3,
+      "union": 36
+    },
+    {
+      "source": "HAYDEE",
+      "target": "ROME",
+      "similarity": 0.0833,
+      "intersection": 4,
+      "union": 48
+    },
+    {
+      "source": "MERCEDES",
+      "target": "NOIRTIER",
+      "similarity": 0.0833,
+      "intersection": 5,
+      "union": 60
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "MERCEDES",
+      "similarity": 0.0816,
+      "intersection": 4,
+      "union": 49
+    },
+    {
+      "source": "CHATEAUDIF",
+      "target": "DANGLARS",
+      "similarity": 0.0811,
+      "intersection": 6,
+      "union": 74
+    },
+    {
+      "source": "HAYDEE",
+      "target": "NOIRTIER",
+      "similarity": 0.0800,
+      "intersection": 4,
+      "union": 50
+    },
+    {
+      "source": "CHATEAUDIF",
+      "target": "PARIS",
+      "similarity": 0.0769,
+      "intersection": 7,
+      "union": 91
+    },
+    {
+      "source": "NOIRTIER",
+      "target": "ROME",
+      "similarity": 0.0769,
+      "intersection": 5,
+      "union": 65
+    },
+    {
+      "source": "CONSPIRACY",
+      "target": "FERNAND",
+      "similarity": 0.0741,
+      "intersection": 2,
+      "union": 27
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "NOIRTIER",
+      "similarity": 0.0727,
+      "intersection": 4,
+      "union": 55
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "NOIRTIER",
+      "similarity": 0.0714,
+      "intersection": 4,
+      "union": 56
+    },
+    {
+      "source": "CONSPIRACY",
+      "target": "VALENTINE",
+      "similarity": 0.0714,
+      "intersection": 3,
+      "union": 42
+    },
+    {
+      "source": "DANGLARS",
+      "target": "FARIA",
+      "similarity": 0.0685,
+      "intersection": 5,
+      "union": 73
+    },
+    {
+      "source": "MERCEDES",
+      "target": "ROME",
+      "similarity": 0.0678,
+      "intersection": 4,
+      "union": 59
+    },
+    {
+      "source": "FERNAND",
+      "target": "FRANZ",
+      "similarity": 0.0652,
+      "intersection": 3,
+      "union": 46
+    },
+    {
+      "source": "MAXIMILIAN",
+      "target": "PHARAON",
+      "similarity": 0.0652,
+      "intersection": 3,
+      "union": 46
+    },
+    {
+      "source": "FARIA",
+      "target": "HAYDEE",
+      "similarity": 0.0645,
+      "intersection": 2,
+      "union": 31
+    },
+    {
+      "source": "FERNAND",
+      "target": "MAXIMILIAN",
+      "similarity": 0.0638,
+      "intersection": 3,
+      "union": 47
+    },
+    {
+      "source": "FRANZ",
+      "target": "TREASURE",
+      "similarity": 0.0625,
+      "intersection": 3,
+      "union": 48
+    },
+    {
+      "source": "PHARAON",
+      "target": "ROME",
+      "similarity": 0.0612,
+      "intersection": 3,
+      "union": 49
+    },
+    {
+      "source": "PHARAON",
+      "target": "VALENTINE",
+      "similarity": 0.0600,
+      "intersection": 3,
+      "union": 50
+    },
+    {
+      "source": "DANTES",
+      "target": "VALENTINE",
+      "similarity": 0.0588,
+      "intersection": 4,
+      "union": 68
+    },
+    {
+      "source": "CONSPIRACY",
+      "target": "DANGLARS",
+      "similarity": 0.0580,
+      "intersection": 4,
+      "union": 69
+    },
+    {
+      "source": "FERNAND",
+      "target": "NOIRTIER",
+      "similarity": 0.0577,
+      "intersection": 3,
+      "union": 52
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "VALENTINE",
+      "similarity": 0.0556,
+      "intersection": 3,
+      "union": 54
+    },
+    {
+      "source": "FARIA",
+      "target": "PARIS",
+      "similarity": 0.0549,
+      "intersection": 5,
+      "union": 91
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "VALENTINE",
+      "similarity": 0.0545,
+      "intersection": 3,
+      "union": 55
+    },
+    {
+      "source": "ALBERT",
+      "target": "DANTES",
+      "similarity": 0.0541,
+      "intersection": 4,
+      "union": 74
+    },
+    {
+      "source": "HAYDEE",
+      "target": "TREASURE",
+      "similarity": 0.0541,
+      "intersection": 2,
+      "union": 37
+    },
+    {
+      "source": "PHARAON",
+      "target": "TREASURE",
+      "similarity": 0.0541,
+      "intersection": 2,
+      "union": 37
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "HAYDEE",
+      "similarity": 0.0526,
+      "intersection": 2,
+      "union": 38
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "CHATEAUDIF",
+      "similarity": 0.0526,
+      "intersection": 2,
+      "union": 38
+    },
+    {
+      "source": "CONSPIRACY",
+      "target": "FRANZ",
+      "similarity": 0.0526,
+      "intersection": 2,
+      "union": 38
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "DANTES",
+      "similarity": 0.0517,
+      "intersection": 3,
+      "union": 58
+    },
+    {
+      "source": "MONTECRISTO",
+      "target": "PHARAON",
+      "similarity": 0.0515,
+      "intersection": 5,
+      "union": 97
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "FERNAND",
+      "similarity": 0.0513,
+      "intersection": 2,
+      "union": 39
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "CHATEAUDIF",
+      "similarity": 0.0513,
+      "intersection": 2,
+      "union": 39
+    },
+    {
+      "source": "CADEROUSSE",
+      "target": "HAYDEE",
+      "similarity": 0.0513,
+      "intersection": 2,
+      "union": 39
+    },
+    {
+      "source": "ALBERT",
+      "target": "CADEROUSSE",
+      "similarity": 0.0492,
+      "intersection": 3,
+      "union": 61
+    },
+    {
+      "source": "MERCEDES",
+      "target": "VALENTINE",
+      "similarity": 0.0492,
+      "intersection": 3,
+      "union": 61
+    },
+    {
+      "source": "FARIA",
+      "target": "MAXIMILIAN",
+      "similarity": 0.0455,
+      "intersection": 2,
+      "union": 44
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "MERCEDES",
+      "similarity": 0.0408,
+      "intersection": 2,
+      "union": 49
+    },
+    {
+      "source": "CHATEAUDIF",
+      "target": "ROME",
+      "similarity": 0.0408,
+      "intersection": 2,
+      "union": 49
+    },
+    {
+      "source": "FARIA",
+      "target": "NOIRTIER",
+      "similarity": 0.0408,
+      "intersection": 2,
+      "union": 49
+    },
+    {
+      "source": "CHATEAUDIF",
+      "target": "VALENTINE",
+      "similarity": 0.0400,
+      "intersection": 2,
+      "union": 50
+    },
+    {
+      "source": "MAXIMILIAN",
+      "target": "TREASURE",
+      "similarity": 0.0400,
+      "intersection": 2,
+      "union": 50
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "MAXIMILIAN",
+      "similarity": 0.0392,
+      "intersection": 2,
+      "union": 51
+    },
+    {
+      "source": "ALBERT",
+      "target": "FARIA",
+      "similarity": 0.0370,
+      "intersection": 2,
+      "union": 54
+    },
+    {
+      "source": "NOIRTIER",
+      "target": "TREASURE",
+      "similarity": 0.0364,
+      "intersection": 2,
+      "union": 55
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "NOIRTIER",
+      "similarity": 0.0357,
+      "intersection": 2,
+      "union": 56
+    },
+    {
+      "source": "ALBERT",
+      "target": "PHARAON",
+      "similarity": 0.0351,
+      "intersection": 2,
+      "union": 57
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "DANTES",
+      "similarity": 0.0351,
+      "intersection": 2,
+      "union": 57
+    },
+    {
+      "source": "ALBERT",
+      "target": "TREASURE",
+      "similarity": 0.0333,
+      "intersection": 2,
+      "union": 60
+    },
+    {
+      "source": "HAYDEE",
+      "target": "PHARAON",
+      "similarity": 0.0286,
       "intersection": 1,
-      "union": 4
+      "union": 35
+    },
+    {
+      "source": "AUTEUIL",
+      "target": "CHATEAUDIF",
+      "similarity": 0.0263,
+      "intersection": 1,
+      "union": 38
+    },
+    {
+      "source": "BERTUCCIO",
+      "target": "FARIA",
+      "similarity": 0.0263,
+      "intersection": 1,
+      "union": 38
+    },
+    {
+      "source": "FERNAND",
+      "target": "TREASURE",
+      "similarity": 0.0256,
+      "intersection": 1,
+      "union": 39
+    },
+    {
+      "source": "CONSPIRACY",
+      "target": "MAXIMILIAN",
+      "similarity": 0.0250,
+      "intersection": 1,
+      "union": 40
+    },
+    {
+      "source": "FARIA",
+      "target": "FRANZ",
+      "similarity": 0.0227,
+      "intersection": 1,
+      "union": 44
+    },
+    {
+      "source": "CHATEAUDIF",
+      "target": "FRANZ",
+      "similarity": 0.0217,
+      "intersection": 1,
+      "union": 46
+    },
+    {
+      "source": "CONSPIRACY",
+      "target": "MONTECRISTO",
+      "similarity": 0.0217,
+      "intersection": 2,
+      "union": 92
+    },
+    {
+      "source": "CONSPIRACY",
+      "target": "VENGEANCE",
+      "similarity": 0.0213,
+      "intersection": 1,
+      "union": 47
+    },
+    {
+      "source": "FRANZ",
+      "target": "PHARAON",
+      "similarity": 0.0213,
+      "intersection": 1,
+      "union": 47
     }
   ]
 }

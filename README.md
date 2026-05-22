@@ -1,226 +1,219 @@
-<div align="center">
+# Lume: Memory for your Documents
 
-# ⚡ L U M E // ⚡
-### — MEMORY FOR YOUR DOCUMENTS —
-
-[![Rust](https://img.shields.io/badge/RUST-1.70%2B-black?style=for-the-badge&logo=rust&logoColor=%23E0553E)](https://www.rust-lang.org)
-[![Build Status](https://img.shields.io/badge/BUILD-PASSING-black?style=for-the-badge&logo=github&logoColor=%232EA44F)](#)
-[![Dependencies](https://img.shields.io/badge/DEPENDENCIES-ZERO-black?style=for-the-badge&logo=cargo&logoColor=violet)](#)
-[![Security](https://img.shields.io/badge/MEMORY-SECURE-black?style=for-the-badge&logo=powershell&logoColor=cyan)](#)
-[![Style](https://img.shields.io/badge/STYLE-L33T-black?style=for-the-badge&logo=linux&logoColor=yellow)](#)
-
-</div>
+A high-performance Rust library and CLI suite featuring an FST-backed phrase matcher, on-demand document indexer, and field-aware BM25 hybrid search engine.
 
 ---
 
-## [0x00] SYSTEM OVERVIEW
+## ⚡ Quick Start Guide
 
-> *"We hacked away the bloat. Zero heavy database daemons. Zero massive local vector setups. Pure microsecond-speed memory retrieval."*
+Get Lume up and running in under two minutes.
 
-**Lume** (crate name `lume`) is a high-performance, FST-backed tagger and field-aware hybrid lexical-semantic search engine mesh. It acts as an external **high-fidelity memory** for your documents, allowing you to index custom text corpora on-the-fly and search through them using a combination of deterministic dictionary matching, statistical lexical scoring, and remote neural vector boosting.
-
----
-
-## [0x01] THE CAPABILITY GRID (PARITY & UPGRADES)
-
-| SYSTEM SUBSYSTEM | JAVA ORIGINAL (`App.java`) | RUST L33T SUITE (`lume`) |
-| :--- | :---: | :---: |
-| **FST-Backed Maximum Match** (forward-max matching) | 🟢 `ENABLED` | 🟢 `ENABLED` |
-| **Hyphen / Dash Stripping** (`sw-lucene` ≡ `swlucene`) | 🟢 `ENABLED` | 🟢 `ENABLED` |
-| **ASCII Diacritic Folding** (`Zürich` ≡ `Zurich`) | 🟢 `ENABLED` | 🟢 `ENABLED` (Hand-rolled table) |
-| **Hex Separators (`0x1E`)** inside phrase tokens | 🟢 `ENABLED` | 🟢 `ENABLED` |
-| **Synonym Resolution** (multiple FST values emit at same span) | 🟢 `ENABLED` | 🟢 `ENABLED` |
-| **Field-Aware BM25 Index Mesh** | 🔴 `UNSUPPORTED` | 🟢 `CORE ENGINE UPGRADE` |
-| **On-Demand Directory Crawling** (recursive markdown/text indexing) | 🔴 `UNSUPPORTED` | 🟢 `CORE ENGINE UPGRADE` |
-| **Two-Stage Candidate Pruning** (`MiniRoaring` + `PrimeFilter`) | 🔴 `UNSUPPORTED` | 🟢 `CORE ENGINE UPGRADE` |
-| **Pairwise Posting List Jaccard Overlaps** | 🔴 `UNSUPPORTED` | 🟢 `CORE ENGINE UPGRADE` |
-| **Panic-Safe Shell Piping & Unicode-Aligned Snippet Highlighter** | 🔴 `UNSUPPORTED` | 🟢 `CORE ENGINE UPGRADE` |
-| **Erik Hatcher's Semantic Boosting & Vector Integration** | 🔴 `UNSUPPORTED` | 🟢 `CORE ENGINE UPGRADE` (`hatcher-boost` CLI) |
-| **Semantic Entity Co-occurrence Network** (Option A) | 🔴 `UNSUPPORTED` | 🟢 `CORE ENGINE UPGRADE` |
-| **Generative Trigram Markov Prose Engine** (Option C) | 🔴 `UNSUPPORTED` | 🟢 `CORE ENGINE UPGRADE` |
-
----
-
-## [0x02] THE HYBRID RETRIEVAL CORE
-
-The retrieval engine merges lexical precision (what words are explicitly written) with structural tag metadata (what concepts/entities are known) to form a highly optimized hybrid scoring mesh.
-
-```mermaid
-flowchart TD
-    subgraph INGESTION LAYER [0x0A: INGESTION]
-        MD[Markdown/Text Payload] --> MDP[parse_markdown]
-        MDP --> Secs[Document Sections]
-        Secs --> BM25Build[Bm25Index::build]
-        BM25Build --> MiniRoaring[1. Assemble MiniRoaring Posting Lists]
-        BM25Build --> PrimeFilters[2. Encode Gödel Prime modulo tags]
-    end
-
-    subgraph PIPELINE MESH [0x0B: DUAL-STAGE RETRIEVAL]
-        Q[User Search Query] --> QT[tokenize & resolve FST tags]
-        QT --> Stage1[Stage 1: MiniRoaring Union Candidates]
-        Stage1 --> Stage1Tag[Stage 1: Gödel Modulo Tag Signature bypass]
-        Stage1Tag --> Stage2[Stage 2: PrimeFilter Term Membership Skip]
-        Stage2 --> HM[BM25 Scoring: Fast-Skip HashMap Lookups]
-        HM --> Sort[Sort & Highlighting Engine]
-    end
-```
-
-### 1. Two-Stage Microsecond Pruning Pipeline
-
-To scale queries over large corpuses instantly without hitting system bottlenecks:
-*   **Stage 1 (Candidates Isolation)**:
-    *   **MiniRoaring Union**: A custom, zero-dependency bit-packed roaring bitmap (`MiniRoaring`) compiles the exact union of posting lists for query terms.
-    *   **Gödel Modulo Pruning**: If the query matches registered FST tags, candidates are filtered in $O(1)$ time using modulo operations on their perfect prime signature:
-        $$\text{tag\_signature} \pmod{\text{query\_tag\_prime}} == 0$$
-*   **Stage 2 (Scoring & Fast Skip)**:
-    *   **PrimeFilter Fast Skip**: During candidate document scoring, before performing heavy key hashing in term-frequency tables, Lume queries the document's partitioned `PrimeFilter` signature bucket:
-        $$\text{signatures}[\text{bucket}] \pmod{\text{term\_prime}} == 0$$
-        If false, the term is guaranteed to be absent, and scoring calculations are completely bypassed.
-
-### 2. Supported BM25 Formulations
-
-Configure the math engine on-the-fly using environment variables (`VARIANT`):
-*   **Classic BM25** (`classic`): Standard length-normalized term frequency scoring.
-*   **BM25+** (`plus`): Adds a lower-bound delta ($\delta$) to prevent over-penalizing matches in extremely long documents.
-*   **BM25-L** (`l`): Scales term frequency directly by the document's normalization factor to handle extreme length variations.
-
-Tune parameters dynamically:
-```bash
-export VARIANT="classic"      # classic | plus | l
-export K1="1.2"               # Term saturation coefficient
-export B="0.75"               # Document length normalization weight
-export DELTA="1.0"            # Score floor factor (for BM25+)
-export TITLE_WEIGHT="2.0"     # Title match multiplier
-export BODY_WEIGHT="1.0"      # Body match multiplier
-```
-
-### 3. Pairwise Posting List Jaccard Overlaps
-For multi-term inputs, the search console outputs the spatial overlap coefficient between the posting lists of your terms:
-$$\text{Jaccard Similarity}(A, B) = \frac{|A \cap B|}{|A \cup B|}$$
-This provides direct insight into how tightly coupled your search concepts are in the indexed memory.
-
----
-
-## [0x03] ERIK HATCHER'S SEMANTIC BOOSTING (`hatcher-boost`)
-
-For deeper conceptual queries, Lume implements Erik Hatcher's two-shot **Semantic Boosting** pattern, bridging high-speed local lexical indices with remote dense vector embeddings.
-
-```mermaid
-flowchart TD
-    subgraph LOCAL LEXICAL [Stage 1]
-        Q[Input Query] --> BM25[Local BM25 Index Scoring]
-    end
-
-    subgraph NEURAL SEMANTIC [Stage 2]
-        Q --> Shivvr[shivvr.nuts.services Vector Ingestion & Retrieval]
-        Shivvr --> Sim[Cosine Similarity Score]
-    end
-
-    BM25 --> Blend[Hatcher Blending Formulation]
-    Sim --> Blend
-    Blend --> Output[Side-by-Side Competitive Matrix]
-```
-
-### Blending Score Formulation
-For every document hit returned by local search, its final score is boosted by its semantic similarity:
-$$\text{Score}_{\text{hybrid}} = \text{Score}_{\text{BM25}} \times (1.0 + \alpha \times \text{Similarity}_{\text{semantic}})$$
-
-*   **$\alpha$ (Semantic Boost Weight)**: Dynamically scales the neural influence. Tuning $\alpha = 0.0$ returns pure lexical results. Configured via the `ALPHA` environment variable.
-*   **Lexical-First Precision**: BM25 serves as the baseline filter, preserving hard filters, while vector similarities pull conceptually similar matches to the top.
-
-### Ephemeral Remote Vector Store Lifecycle
-To preserve its zero-dependency footprint and avoid compiling heavy ONNX or local neural runtimes in Rust, `hatcher-boost` coordinates with `https://shivvr.nuts.services/` using ephemeral session lifecycles:
-1.  **Unique Session Boot**: Provisions an isolated, time-seeded remote partition (`lume-hatcher-<timestamp>`).
-2.  **Ephesian Bulk Ingestion**: Target markdown files are parsed and ingested chunk-by-chunk to `/temp/:name/ingest`.
-3.  **Neural Vector Search**: Queries are sent to `/temp/:name/search?q=<query>&n=15` to resolve vector similarity scores.
-4.  **Graceful Auto-Teardown**: On REPL shutdown, Lume deletes the remote partition. If interrupted abruptly, the session safely garbage-collects and expires within 2 hours.
-
----
-
-## [0x04] SEMANTIC NETWORKS & GENERATIVE TRIGRAMS
-
-### 1. Entity Co-occurrence Graph (Option A)
-By calculating intersections of `MiniRoaring` bitsets for every registered FST entity, Lume charts a high-performance **Semantic Relationship Mesh** (`src/semantic_mesh.rs`):
-*   Computes exact similarity scores between all discovered entities based on shared document occurrences.
-*   Uses a zero-dependency, hyper-optimized JSON writer to output nodes and edges directly to `monte_cristo_graph.json` in under **1 millisecond**.
-*   Renders a beautiful ASCII relationship grid directly to your console.
-
-### 2. Generative Trigram Markov Engine (Option C)
-Lume hosts a lightning-fast **trigram Markov Chain generator** (`(word1, word2) -> Vec<word3>`) trained on raw words and punctuation tokens:
-*   **Punctuation-Aware Tokenizer**: Keeps alphanumeric tokens clean while preserving contractions (e.g. `d'if`).
-*   **Spacing Reconstructor**: Intelligent parser that dynamically suppresses spaces before closing characters (`.`, `,`, `!`, `?`, `”`, `)`) and after opening characters (`“`, `(`) to output fluid, human-readable text.
-*   **Xorshift64 RNG**: Custom `SimpleRng` seeded from system clock nanoseconds generates text flows in microsecond times.
-*   **Seeded Flow Jumps**: Seed generators with an initial word. Reaches dead-ends? Lume automatically jumps to matching prefix terms to maintain flow.
-
----
-
-## [0x05] OPERATIONS & OPERATIONS MANUAL
-
-### 1. Compile & Build Binaries
-Ensure you have the Rust toolchain installed:
+### 1. Build and Test the System
+Ensure you have the Rust toolchain installed, then clone and compile:
 ```bash
 # Clone the repository
-git clone https://github.com/kordless/rust-fstguardrails.git
-cd rust-fstguardrails
+git clone https://github.com/kordless/lume.git
+cd lume
 
-# Run the test suite (MiniRoaring bitsets, FST match matrices, Gödel validators)
+# Run the test suite (MiniRoaring bitsets, FST match matrices, and spelling correctors)
 cargo test
 
-# Compile fully optimized binaries
+# Build fully optimized production release binaries
 cargo build --release
 ```
 
-### 2. Prepare the Gutenberg Corpus
-To fetch and format *The Count of Monte Cristo* (~2.66 MB) as a high-density test corpus:
-
+### 2. Prepare a Gutenberg Test Corpus
+To fetch and format *The Count of Monte Cristo* (~2.66 MB) as an on-demand test corpus:
 ```bash
 mkdir -p examples
 curl -L -s https://www.gutenberg.org/files/11/11-0.txt > examples/monte_cristo.txt
 
-# Format raw headings into markdown header formats
+# Convert Gutenberg chapter titles into markdown headers for the parser
 sed -E 's/^(CHAPTER [0-9]+)\. (.*)$/# \1. \2/' examples/monte_cristo.txt > examples/monte_cristo.md
 ```
 
-### 3. Load Custom Entity CSVs
-The FST tagger dynamically loads all `.csv` files found inside the directory pointed to by the `DATA` environment variable (e.g., `DATA="examples/data"`).
+### 3. Run Your First Search
+Lume crawls, tokenizes, indexes, and queries the corpus in milliseconds:
+```bash
+# Crawl and search the entire examples/ directory on-the-fly
+DATA="examples/data" cargo run --release --bin search -- examples "monte cristo"
+```
 
-Example format (`examples/data/character.csv`):
-```csv
-phrase,action
-Edmond Dantès,DANTES
-Dantès,DANTES
-Mercédès,MERCEDES
-Abbé Faria,FARIA
+### 4. Try Hatcher's Semantic Boosting REPL
+Coordinate with a remote neural embedder (`shivvr.nuts.services`) to run conceptual searches:
+```bash
+DATA="examples/data" ALPHA=2.0 cargo run --release --bin hatcher-boost -- examples/monte_cristo.md
 ```
 
 ---
 
-## [0x06] THE RUNTIME COMMANDS
+## 📖 The Backstory: From FST Tagger to Search Engine Mesh
 
-### Subsystem A: The Standard Lexical/FST Search Engine
+### The FST Genesis (Steve's Primitive)
+Lume started as a fork of `fstguardrails` by Steve Harris (`jsclosures`), an OG search expert. Steve's original contribution was a highly specialized, zero-dependency JavaScript finite-state tagger (`lib.js`). In search engineering, the **Finite State Transducer (FST)** is a legendary primitive—it compiles massive dictionaries of phrases into highly compressed, deterministically navigable byte paths. 
+
+Steve's tagger demonstrated how to perform longest-match phrase tagging, ASCII diacritic folding, and hyphen stripping with unmatched memory efficiency. This tagger was ideal for enforcing guardrails (like identifying and isolating offensive terminology), but FST phrase matching alone only tells you *what* terms are in your documents, not *how* relevant the documents are to a broader query.
+
+### Systems and Advertising Scale (Kord's Backstory)
+Kord Campbell (`kordless`) came to search from a systems and web-crawling background. Having set up and deployed Apache Lucene years ago, he wanted to break open the black box to understand how its search mechanics operated under the hood at scale.
+
+In search advertising (SEO and ad networks), systems must calculate intersections of massive document and user segment lists in microseconds to serve the right ads. This extreme environment gave birth to **Roaring Bitmaps**—a highly compressed representation of integer arrays that performs bitwise set math at hardware speed. While Lucene eventually integrated similar bitset models into its indexing pipeline, roaring bitmaps remain one of the most powerful primitives in information retrieval.
+
+By fusing **Steve's FST phrase matching** with **Kord's systems-level set intersections** and traditional **BM25 lexical ranking**, Lume was born. It is a modern search engine constructed by layering primitive upon primitive directly on top of the FST word tree.
+
+---
+
+## 🛠️ The Seven Primitives of Lume
+
+Lume is designed as a stack of modular, self-contained search primitives. Each layer builds upon the FST word tree to add query understanding, search relevance, spatial graphs, and semantic intent.
+
+```mermaid
+graph TD
+    P1[Primitive 1: FST Word Tree] --> P2[Primitive 2: MiniRoaring Postings]
+    P2 --> P3[Primitive 3: Gödel & PrimeFilters]
+    P3 --> P4[Primitive 4: Field-Aware BM25]
+    P4 --> P5[Primitive 5: Trigram Spelling Index]
+    P5 --> P6[Primitive 6: Semantic Entity Co-occurrence Graph]
+    P6 --> P7[Primitive 7: Hatcher Semantic Boosting]
+```
+
+### [Primitive 1] The FST Phrase Tagger
+The foundation of the engine is the Finite State Transducer. It parses dictionaries of phrases (loaded dynamically from CSV files in the `DATA` directory) and compiles them into a single FST byte map.
+*   **What it does**: Scans incoming text streams and tags entities in $O(\text{text length})$ time, matching synonyms and resolving overlapping spans using a longest-match policy.
+*   **OG Code Reference**:
+    ```rust
+    // Compiles search phrases into deterministic state paths in src/lib.rs
+    let mut builder = MapBuilder::memory();
+    for (key, idx) in &keyed {
+        builder.insert(key, *idx)?;
+    }
+    ```
+
+### [Primitive 2] MiniRoaring Bitmaps
+To support lightning-fast document isolation, we represent the posting lists of the search index using roaring bitmaps.
+*   **What it does**: Instead of tracking document lists with basic integer arrays or maps, Lume maps terms to custom-built `MiniRoaring` bitsets. For multi-word queries, it performs intersection (`AND`) or union (`OR`) bitsets in microseconds to immediately restrict candidate documents.
+*   **OG Code Reference**:
+    ```rust
+    // Intersects document hit candidate sets instantly in src/fast_retrieval.rs
+    pub fn intersection(&self, other: &Self) -> Self {
+        // High-speed bitwise AND operations over packed integer blocks
+    }
+    ```
+
+### [Primitive 3] Gödel Signatures & PrimeFilters
+We use number theory to completely bypass expensive scoring loops for irrelevant documents.
+*   **What it does**:
+    1.  **Gödel Modulo Pruning**: If a query has FST tags, Lume skips candidate documents in $O(1)$ time by verifying if the document's perfect Gödel tag signature is divisible by the query's prime signature:
+        $$\text{tagSignature} \pmod{\text{queryTagPrime}} == 0$$
+    2.  **PrimeFilter Skips**: Before scoring a document, Lume checks a bitset-like signature bucket. If the division has a remainder, the document is guaranteed not to contain the term, and we skip standard HashMap lookups entirely:
+        $$\text{signatures}[\text{bucket}] \pmod{\text{termPrime}} == 0$$
+
+### [Primitive 4] Field-Aware BM25 Scoring
+The lexical scoring core implements BM25 ranking, allowing fields (like document titles vs. document bodies) to carry different weights.
+*   **What it does**: Evaluates matches and assigns relevance scores based on three configurable formulations: Classic, BM25+, and BM25-L (optimized for varying document lengths).
+*   **OG Code Reference**:
+    ```rust
+    // Scoring logic configured dynamically via environment parameters:
+    let bm25_score = idf * (tf * (k1 + 1.0)) / (tf + k1 * (1.0 - b + b * (doc_len / avg_len)));
+    ```
+
+### [Primitive 5] Trigram Spelling Index
+A dedicated spelling corrector built directly into the indexing phase.
+*   **What it does**: Breaks down both the static FST tagger phrases and the corpus terms into character-level trigrams (e.g., `"this"` $\rightarrow$ `["_th", "thi", "his", "is_"]`). It builds an inverted index of these trigrams using roaring bitmaps and BM25.
+*   **Fuzzy Guardrails**: If a user misspells an FST tag (including naughty/offensive words), Lume's spelling index automatically maps it back to the closest matching dictionary term using Levenshtein edit-distance checks before querying.
+*   **OG Code Reference**:
+    ```rust
+    // Resolves typos like "lucne" to "lucene" in src/spelling.rs
+    let suggestions = spell_index.correct_word("lucne", 1); // Returns "lucene"
+    ```
+
+### [Primitive 6] Semantic Entity Co-occurrence Graph (Option A)
+A mathematical graphing layer that crosses FST dictionary tags with document-level roaring bitmaps.
+*   **What it does**: Computes the exact co-occurrence frequency and Jaccard similarity between all registered entities based on their document overlap:
+    $$\text{Jaccard}(A, B) = \frac{|A \cap B|}{|A \cup B|}$$
+    It serializes this network into a clean `monte_cristo_graph.json` mesh file in less than **1 millisecond** using a custom zero-dependency JSON writer, displaying a beautiful box-aligned relationship grid in the console:
+    ```text
+    ┌──────────────────────────────┬──────────────────────────────┬────────┬───────┐
+    │ ENTITY A                     │ ENTITY B                     │JACCARD │CO-OCC │
+    ├──────────────────────────────┼──────────────────────────────┼────────┼───────┤
+    │ VALENTINE                    │ VILLEFORT                    │ 0.4400 │  33/75  │
+    │ DANTES                       │ MARSEILLES                   │ 0.4386 │  25/57  │
+    │ ALBERT                       │ MONTECRISTO                  │ 0.4368 │  38/87  │
+    │ DANTES                       │ MERCEDES                     │ 0.4348 │  20/46  │
+    │ DANGLARS                     │ MONTECRISTO                  │ 0.4272 │  44/103 │
+    │ ALBERT                       │ PARIS                        │ 0.4186 │  36/86  │
+    │ MONTECRISTO                  │ VILLEFORT                    │ 0.4144 │  46/111 │
+    │ MAXIMILIAN                   │ VALENTINE                    │ 0.4043 │  19/47  │
+    │ DANGLARS                     │ VILLEFORT                    │ 0.4021 │  39/97  │
+    │ MARSEILLES                   │ PARIS                        │ 0.4000 │  36/90  │
+    │ DANTES                       │ PHARAON                      │ 0.3750 │  15/40  │
+    │ MARSEILLES                   │ VILLEFORT                    │ 0.3721 │  32/86  │
+    │ FERNAND                      │ MERCEDES                     │ 0.3714 │  13/35  │
+    │ DANTES                       │ FARIA                        │ 0.3684 │  14/38  │
+    │ CHATEAUDIF                   │ DANTES                       │ 0.3500 │  14/40  │
+    │ MARSEILLES                   │ MERCEDES                     │ 0.3455 │  19/55  │
+    │ MERCEDES                     │ PHARAON                      │ 0.3429 │  12/35  │
+    │ MAXIMILIAN                   │ NOIRTIER                     │ 0.3400 │  17/50  │
+    └──────────────────────────────┴──────────────────────────────┴────────┴───────┘
+    ```
+
+### [Primitive 7] Erik Hatcher's Semantic Boosting & Vector Integration (`hatcher-boost`)
+Our flagship hybrid integration, implementing Erik Hatcher's two-stage **Semantic Boosting** pattern.
+*   **What it does**: Combines the precision and safety of local lexical search with the conceptual awareness of deep-neural ONNX embeddings:
+    1.  **Stage 1 (ONNX Semantic Retrieval)**: Establishes a connection to an ephemeral, time-seeded session on `https://shivvr.nuts.services/` to retrieve top conceptual candidates and their cosine similarity scores.
+    2.  **Stage 2 (Local Lexical Scoring)**: Calculates standard BM25 rankings for candidates.
+    3.  **Blending Math**: Blends both scores using Hatcher's formulation, allowing the semantic vector similarity to boost the lexical relevance score:
+        $$\text{Score}_{\text{hybrid}} = \text{Score}_{\text{BM25}} \times (1.0 + \alpha \times \text{Similarity}_{\text{semantic}})$$
+*   **OG Code Reference**:
+    ```rust
+    // Core hybrid blend in src/bin/hatcher_boost.rs
+    let hybrid_score = bm25_score * (1.0 + alpha * semantic_score);
+    ```
+
+---
+
+## 📊 Subsystem Capability Grid
+
+| Subsystem Component | Inputs | Primary Outputs | Primary Technology |
+| :--- | :--- | :--- | :--- |
+| **FST Tagger** (`tag-server`) | Text Stream + CSVs | Structured JSON Spans | `tantivy-fst` Trie Walking |
+| **Lexical Search** (`search`) | Multi-term Query | Ranked Text Snippets | Field-Aware BM25 + Highlighting |
+| **Spelling Index** | String with Typos | Suggested Corrections | Trigram Bitmaps + Levenshtein DP |
+| **Entity Mesh** (Option A) | Document Corpus | `monte_cristo_graph.json` | Pairwise Roaring Bitset Jaccard |
+| **Prose Generator** (Option C) | Seed Token | Generated Text Paragraphs | Trigram Markov Chain + SimpleRng |
+| **Semantic Boost** (`hatcher-boost`) | Text Stream + Query | Comparative Relevance Grid | Local BM25 + Remote Vector Embeddings |
+
+---
+
+## 🛠️ CLI Operations Manual
+
+### Compile and Standard Search
 ```bash
-# Search a single markdown file with FST tagging active
+# Clean build and compile fully optimized binaries
+cargo build --release
+
+# Single-file search targeting a markdown document
 DATA="examples/data" cargo run --release --bin search -- examples/monte_cristo.md "mercedes dantes"
 
-# Run On-Demand Directory Crawling (Crawls all markdown files under examples/ on-the-fly)
+# On-demand recursive directory crawling and indexing
 DATA="examples/data" cargo run --release --bin search -- examples "monte cristo"
 ```
 
-### Subsystem B: Semantic Relationship Network (Option A)
+### Entity Network Generation (Option A)
 ```bash
-# Generate co-occurrence matrix and write JSON mesh
+# Construct entity relationship mesh (computes Jaccard > 0.02)
 DATA="examples/data" cargo run --release --bin search -- examples/monte_cristo.md graph 0.02
 ```
 
-### Subsystem C: Trigram Markov Prose Generator (Option C)
+### Markov Prose Generation (Option C)
 ```bash
-# Seed generator with a starting term in Dumas' style
+# Seed paragraph writer in Dumas' style
 DATA="examples/data" cargo run --release --bin search -- examples/monte_cristo.md generate Dantès
 ```
 
-### Subsystem D: Erik Hatcher's Semantic Boosting (`hatcher-boost`)
+### Erik Hatcher's Semantic Boosting
 ```bash
-# Run one-shot hybrid search with custom semantic boost factor
+# One-shot semantic-boosting with custom alpha weight
 DATA="examples/data" ALPHA=3.0 cargo run --release --bin hatcher-boost -- examples/monte_cristo.md "mercedes dantes"
 
 # Launch the interactive semantic-boost REPL console
@@ -229,18 +222,20 @@ DATA="examples/data" ALPHA=2.0 cargo run --release --bin hatcher-boost -- exampl
 
 ---
 
-## [0x07] INTERACTIVE REPL CONSOLE COMMANDS
+## 💬 Interactive REPL Interface
 
-When you run either search binary without query arguments, Lume enters an interactive REPL shell (`search >` or `hybrid-search >`).
+Both the `search` and `hatcher-boost` binaries boot into an interactive shell when run without a query argument.
 
-*   **Type any query** (e.g. `faria dungeon`) to print sorted matches.
-*   **In standard search**:
+*   **Standard REPL (`search >`)**:
+    *   Type any search terms (e.g. `faria dungeon`) to print ranked and highlighted snippets.
     *   `graph [min_similarity]` (e.g. `graph 0.02`) to compute the entity network.
     *   `generate [seed]` (e.g. `generate Mercédès`) to draft Dumas-styled prose.
-*   **Type `exit` or `quit`** to safely close the session (and cleanly tear down remote vector stores).
+*   **Hybrid REPL (`hybrid-search >`)**:
+    *   Type queries to display side-by-side comparative columns for **Pure Lexical BM25**, **Pure Semantic (ONNX)**, and **Hatcher Boosted Hybrid** rankings.
+*   **Type `exit` or `quit`** in either interface to safely terminate the session.
 
 ---
 
 <div align="center">
-<b>⚡ POWERED BY TANTIVY-FST // MADE SAFE WITH RUST // ZERO DAMPENERS ⚡</b>
+<b>L U M E // BUILT IN RUST // ZERO DAMPENERS</b>
 </div>
