@@ -199,12 +199,12 @@ Our flagship hybrid integration, implementing the two-stage **Semantic Boosting*
     2.  **Stage 2 (Local Lexical Scoring)**: Calculates standard BM25 rankings for candidates.
     3.  **Blending Math**: Blends both scores using Hatcher's formulation, allowing the semantic vector similarity to boost the lexical relevance score:
         ```text
-        Score_hybrid = Score_BM25 + (alpha * Similarity_semantic)
+        Score_hybrid = Score_BM25 * (1.0 + alpha * Similarity_semantic)
         ```
 *   **OG Code Reference**:
     ```rust
     // Core hybrid blend in src/bin/hatcher_boost.rs
-    let hybrid_score = bm25_score + (alpha * semantic_score);
+    let hybrid_score = bm25_score * (1.0 + alpha * semantic_score);
     ```
 
 ---
