@@ -264,6 +264,189 @@ impl MarkovChain {
 
         reconstruct_spaces(&tokens)
     }
+
+    /// Generates steered text utilizing an FST tagger and co-occurrence posting lists for local attention feedback.
+    pub fn generate_steered(
+        &self,
+        seed_word: Option<&str>,
+        max_tokens: usize,
+        tagger: Option<&crate::Tagger>,
+        posting_lists: &HashMap<String, MiniRoaring>,
+    ) -> (String, Vec<(usize, HashMap<String, f64>)>) {
+        let mut rng = SimpleRng::new();
+        let mut tokens = Vec::new();
+        let mut visited_trigrams = std::collections::HashSet::new();
+        let mut attention_register: HashMap<String, f64> = HashMap::new();
+        let mut attention_history = Vec::new();
+
+        // 1. Choose starting pair
+        let mut current_pair = None;
+        if let Some(seed) = seed_word {
+            let mut candidates = Vec::new();
+            let seed_lower = seed.to_lowercase();
+            for key in self.transitions.keys() {
+                if key.0.to_lowercase() == seed_lower {
+                    candidates.push(key.clone());
+                }
+            }
+            if !candidates.is_empty() {
+                let idx = rng.next_range(0, candidates.len());
+                current_pair = Some(candidates[idx].clone());
+            }
+        }
+
+        // Fallback to random sentence starters
+        if current_pair.is_none() && !self.start_words.is_empty() {
+            let idx = rng.next_range(0, self.start_words.len());
+            current_pair = Some(self.start_words[idx].clone());
+        }
+
+        let (mut w1, mut w2) = match current_pair {
+            Some(pair) => pair,
+            None => return (String::from("No styled text generated (empty index)."), Vec::new()),
+        };
+
+        tokens.push(w1.clone());
+        tokens.push(w2.clone());
+
+        // Tag initial words
+        if let Some(ref t) = tagger {
+            let initial_text = reconstruct_spaces(&tokens);
+            let matched = t.tag(&initial_text);
+            for tag in matched {
+                attention_register.insert(tag.output.clone(), 1.0);
+            }
+        }
+
+        let mut token_count = 2;
+        while token_count < max_tokens {
+            let key = (w1.clone(), w2.clone());
+            if let Some(next_words) = self.transitions.get(&key) {
+                if next_words.is_empty() {
+                    break;
+                }
+
+                // Deduplicate transitions
+                let mut candidates_w3 = Vec::new();
+                for w in next_words {
+                    let trigram = (w1.clone(), w2.clone(), w.clone());
+                    if !visited_trigrams.contains(&trigram) {
+                        candidates_w3.push(w.clone());
+                    }
+                }
+
+                let w3 = if !candidates_w3.is_empty() {
+                    // Compute dynamic attention weights for candidates
+                    let mut candidate_weights = vec![1.0; candidates_w3.len()];
+                    for (c_idx, c) in candidates_w3.iter().enumerate() {
+                        let c_upper = c.to_uppercase();
+                        
+                        for (active_tag, active_weight) in &attention_register {
+                            let tag_upper = active_tag.to_uppercase();
+                            
+                            // 1. Co-occurrence graph Jaccard boost
+                            if let (Some(list_c), Some(list_t)) = (posting_lists.get(&c_upper), posting_lists.get(&tag_upper)) {
+                                let jaccard = list_c.jaccard_similarity(list_t);
+                                if jaccard > 0.0 {
+                                    candidate_weights[c_idx] += 80.0 * jaccard * active_weight;
+                                }
+                            }
+                            
+                            // 2. Direct name/substring matching boost
+                            if tag_upper.contains(&c_upper) || c_upper.contains(&tag_upper) {
+                                candidate_weights[c_idx] += 30.0 * active_weight;
+                            }
+                        }
+                    }
+
+                    // Weighted random choice
+                    let total_weight: f64 = candidate_weights.iter().sum();
+                    if total_weight > 0.0 {
+                        let mut roll = (rng.next_range(0, 100000) as f64 / 100000.0) * total_weight;
+                        let mut chosen_idx = 0;
+                        for (idx, &w) in candidate_weights.iter().enumerate() {
+                            roll -= w;
+                            if roll <= 0.0 {
+                                chosen_idx = idx;
+                                break;
+                            }
+                        }
+                        candidates_w3[chosen_idx].clone()
+                    } else {
+                        let next_idx = rng.next_range(0, candidates_w3.len());
+                        candidates_w3[next_idx].clone()
+                    }
+                } else {
+                    // Jump to a new start pair to maintain natural diversity
+                    if !self.start_words.is_empty() {
+                        let idx = rng.next_range(0, self.start_words.len());
+                        let (start_w1, start_w2) = self.start_words[idx].clone();
+                        w1 = start_w1;
+                        w2 = start_w2;
+                        tokens.push(w1.clone());
+                        tokens.push(w2.clone());
+                        token_count += 2;
+                        continue;
+                    } else {
+                        break;
+                    }
+                };
+
+                visited_trigrams.insert((w1.clone(), w2.clone(), w3.clone()));
+                tokens.push(w3.clone());
+
+                // Feed newly generated token back to FST Tagger to detect active entities
+                if let Some(ref t) = tagger {
+                    let recent_len = tokens.len().min(5);
+                    let recent_tokens = &tokens[tokens.len() - recent_len..];
+                    let recent_text = reconstruct_spaces(recent_tokens);
+                    let matched_tags = t.tag(&recent_text);
+                    for tag in matched_tags {
+                        attention_register.insert(tag.output.clone(), 1.0);
+                    }
+                }
+
+                // Decay attention weights
+                for weight in attention_register.values_mut() {
+                    *weight *= 0.85;
+                }
+                attention_register.retain(|_, &mut w| w > 0.05);
+
+                // Record attention trace history for visualization
+                if !attention_register.is_empty() {
+                    attention_history.push((tokens.len(), attention_register.clone()));
+                }
+
+                w1 = w2;
+                w2 = w3.clone();
+                token_count += 1;
+
+                // End at natural sentence boundary if we have enough text
+                if token_count > 80 && (w3 == "." || w3 == "!" || w3 == "?") {
+                    break;
+                }
+            } else {
+                // Handle transition dead ends by jumping to another suffix if possible
+                let mut candidates = Vec::new();
+                for k in self.transitions.keys() {
+                    if k.0 == w2 {
+                        candidates.push(k.clone());
+                    }
+                }
+                if !candidates.is_empty() {
+                    let idx = rng.next_range(0, candidates.len());
+                    w1 = candidates[idx].0.clone();
+                    w2 = candidates[idx].1.clone();
+                    tokens.push(w2.clone());
+                    token_count += 1;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        (reconstruct_spaces(&tokens), attention_history)
+    }
 }
 
 fn is_good_sentence_start(s: &str) -> bool {

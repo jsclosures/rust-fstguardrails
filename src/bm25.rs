@@ -9,6 +9,7 @@ pub struct Section {
     pub title: String,
     pub body: String,
     pub line_number: usize,
+    pub filename: Option<String>,
 }
 
 /// The three BM25 variants supported by the engine.
@@ -121,6 +122,7 @@ pub fn parse_markdown(content: &str) -> Vec<Section> {
                     title: current_title,
                     body: body_text,
                     line_number: start_line,
+                    filename: None,
                 });
                 
                 current_title = header_text;
@@ -138,6 +140,7 @@ pub fn parse_markdown(content: &str) -> Vec<Section> {
         title: current_title,
         body: body_text,
         line_number: start_line,
+        filename: None,
     });
 
     // Retain sections that aren't completely blank
