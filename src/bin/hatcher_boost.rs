@@ -4,8 +4,8 @@
 //!   - Stage 1: Remote Dense Vector Semantic Retrieval (via `https://shivvr.nuts.services/`)
 //!   - Stage 2: Local High-Performance Lexical BM25 Ranking
 //!
-//! Boosting Formulation:
-//!   Score_hybrid = Score_BM25 * (1.0 + alpha * Score_semantic)
+//! Blending Formulation (True Hybrid Additive Blend):
+//!   Score_hybrid = Score_BM25 + (alpha * Score_semantic)
 //!
 //! Usage:
 //!   cargo run --bin hatcher-boost [target.md] [optional search term]
@@ -17,7 +17,7 @@ use std::fs;
 use std::io::{self, Write};
 use std::process;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use lume::bm25::{parse_markdown, Bm25Index, Bm25Params, SearchVariant, Section};
 use lume::{tokenize, Tagger};
@@ -262,7 +262,7 @@ fn main() {
     println!("\x1B[1;33mHybrid configuration:\x1B[0m");
     println!("  BM25 Variant: \x1B[35m{:?}\x1B[0m", variant);
     println!("  Semantic Boost Factor (ALPHA): \x1B[35m{:.2}\x1B[0m", alpha);
-    println!("  Equation: \x1B[1;32mScore_hybrid = Score_BM25 * (1.0 + {} * Similarity_semantic)\x1B[0m", alpha);
+    println!("  Equation: \x1B[1;32mScore_hybrid = Score_BM25 + ({} * Similarity_semantic)\x1B[0m", alpha);
     println!();
 
     if let Some(query) = query_arg {
@@ -372,26 +372,28 @@ fn execute_hybrid_search(
     // --- STAGE 3: HATCHER SEMANTIC BOOST BLENDING ---
     let blend_start = Instant::now();
     
-    // We combine the candidate pools. Erik Hatcher's Semantic Boosting acts as a boost to BM25 scores.
-    // If a document is matched by BM25, we boost it. If it is ONLY matched by semantic search,
-    // we can either add it with a low base score or leave it out depending on whether we want a lexical-first or pure-union recall.
-    // Erik Hatcher's "Semantic Boosting" specifically targets using vector similarity scores to boost the matches of a lexical query,
-    // allowing structural constraints (like filters) and precision of full-text queries to remain dominant while ranking gets the conceptual boost.
-    // Thus, the candidate pool is based on the BM25 hits, and we apply boosts to those hits.
+    // We combine the candidate pools in a True Hybrid Additive Blend (union of lexical and semantic hits).
+    // This allows conceptual/semantic-only matches (BM25 score of 0.0) to be returned and ranked.
+    let mut candidate_indices = HashSet::new();
+    for hit in &bm25_hits {
+        candidate_indices.insert(hit.section_index);
+    }
+    for &idx in semantic_map.keys() {
+        candidate_indices.insert(idx);
+    }
+
     let mut hybrid_hits: Vec<(usize, f64, f64, f64, bool)> = Vec::new();
 
-    for hit in &bm25_hits {
-        let idx = hit.section_index;
-        let bm25_score = hit.score;
-        
+    for idx in candidate_indices {
+        let bm25_score = bm25_map.get(&idx).map(|(_, s)| *s).unwrap_or(0.0);
         let (sem_score, boosted) = if let Some((_, sem_s)) = semantic_map.get(&idx) {
             (*sem_s, true)
         } else {
             (0.0, false)
         };
 
-        // Score formulation: Score_hybrid = Score_BM25 * (1.0 + alpha * Score_semantic)
-        let hybrid_score = bm25_score * (1.0 + alpha * sem_score);
+        // Score formulation: Score_hybrid = Score_BM25 + (alpha * Score_semantic)
+        let hybrid_score = bm25_score + (alpha * sem_score);
 
         hybrid_hits.push((idx, bm25_score, sem_score, hybrid_score, boosted));
     }
@@ -438,9 +440,9 @@ fn execute_hybrid_search(
         for (r, &(idx, bm25_s, sem_s, hybrid_s, boosted)) in hybrid_hits.iter().take(5).enumerate() {
             let sec = &index.sections[idx];
             let boost_indicator = if boosted {
-                format!("\x1B[32m✨ Boosted (+{:.1}% from semantic Sim {:.4})\x1B[0m", (sem_s * alpha * 100.0), sem_s)
+                format!("\x1B[32m✨ Boosted (+{:.4} from semantic Sim {:.4})\x1B[0m", (alpha * sem_s), sem_s)
             } else {
-                "\x1B[31m✖ No Semantic Match (unboosted)\x1B[0m".to_string()
+                "\x1B[31m✖ Lexical Only (no semantic contribution)\x1B[0m".to_string()
             };
             
             println!("  [{}] Hybrid Score: \x1B[1;33m{:.4}\x1B[0m (BM25: {:.4}) | \x1B[1m{}\x1B[0m", r + 1, hybrid_s, bm25_s, sec.title);
